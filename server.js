@@ -11,7 +11,7 @@ app.set('port', process.env.PORT || 3001);
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
+app.use(express.cookieParser());
 app.use(express.favicon());
 
 app.get('/', routes.index);
@@ -38,8 +38,10 @@ io.on('connection', function (socket) {
         });
       });
 
+      var firstHand = game.getPlayerFirstHand(data.playerId);
+
       gameDetails = {
-        hand: game.getPlayerFirstHand(data.playerId),
+        hand: firstHand,
         players: players,
         trumpher: data.playerId == 1
       }
@@ -67,6 +69,29 @@ io.on('connection', function (socket) {
         io.to(player.connectionId).emit('trumps-and-next-hand', details);
       });
     })
+  });
+  
+
+  socket.on('card-played', function(data){
+    console.log('card-played')
+    console.log(data);
+
+    routes.cardPlayed(data, function(err, game){
+      if(err){
+        socket.emit("cant-play-card", {msg: err, card: data.card});
+        return;
+      }
+      
+      game.players.forEach(function(player){
+        details = {
+          player: data.playerId,
+          card: data.card
+        };
+
+        io.to(player.connectionId).emit('played-card', details);
+      });
+    })
+
   });
 });
 

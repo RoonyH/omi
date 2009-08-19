@@ -1,11 +1,13 @@
 var redis = require('redis')
+var crypto = require('crypto');
 
 var client = redis.createClient();
 
 
 function registerGame(callback){
   client.incr('omi-games', function(err, id){
-    createDeck(id, function(){
+    createDeck(id, function(deck){
+      addInitialHands(id, deck);
       createPlayers(id, function(){
         setTrumps(id, {playerId: 1}, function(){
           callback(id);
@@ -18,8 +20,26 @@ function registerGame(callback){
 
 function registerPlayer(gameId, callback){
   client.incr('omi-players-' + gameId, function(err, id){
-    callback(id);
+    sec = random();
+    client.set('pl-sec-'+gameId+id, sec, function(err){
+      callback(id, sec);
+    })
   });
+}
+
+
+function random(){
+  return crypto.randomBytes(8).toString('hex')
+}
+
+
+function validateUser(gameId, playerId, entered_sec, callback){
+  client.get('pl-sec-'+gameId+id, function(err, sec){
+    if(sec===entered_sec)
+      callback(true);
+    else
+      callback(false);
+  })
 }
 
 
@@ -110,9 +130,59 @@ function createDeck(id, callback){
 
 
 function createPlayers(id, callback){
-  console.log('creating empty players')
+  console.log('creating empty players');
+  
   client.lpush('players-'+id, null, null, null, null, function(err, num){
     callback(err, []);
+  });
+}
+
+
+function addInitialHands(gameId, deck){
+  var addHand = function(playerId){
+    var first = deck.slice((playerId-1)*4, (playerId-1)*4+4);
+    var second = deck.slice(16 + (playerId-1)*4, 16 + (playerId-1)*4+4);
+    setHand(gameId, playerId, first.concat(second), function(){
+      playerId = playerId+1;
+      if(playerId<=4)
+        addHand(playerId++);
+    });
+  };
+
+  addHand(1);
+}
+
+
+function setHand(gameId, playerId, hand, callback){
+  client.set('hand-'+gameId+playerId, JSON.stringify(hand), function(){
+    callback(hand);
+    return;
+  });
+}
+
+
+function getHand(gameId, playerId, callback){
+  client.get('hand-'+gameId+playerId, function(err, hand){
+    callback(JSON.parse(hand));
+    return;
+  });
+}
+
+
+function setHandKind(gameId, kind, callback){
+  client.set('handkind-'+gameId, kind, function(){
+    callback(kind);
+    return;
+  });
+}
+
+
+function getHandKind(gameId, callback){
+  client.get('handkind-'+gameId, function(err, kind){
+    if(!kind)
+      kind = "n"
+    callback(kind);
+    return;
   });
 }
 
@@ -213,3 +283,7 @@ exports.registerGame = registerGame;
 exports.registerPlayer = registerPlayer;
 exports.setTrumps = setTrumps;
 exports.getTrumps = getTrumps;
+exports.setHand = setHand;
+exports.getHand = getHand;
+exports.setHandKind = setHandKind;
+exports.getHandKind = getHandKind;

@@ -6,9 +6,9 @@ requirejs.config({
     }
 });
 
-
 require(['jquery', 'models/game'], function($, game){
   $(function(){
+  
     socket = io.connect('http://localhost');
 
     socket.on('game', function (data) {
@@ -20,7 +20,13 @@ require(['jquery', 'models/game'], function($, game){
 
       data.hand.forEach(function(card){
         var c = g.createCard(card);
-        c.set('clickHandler', function(){p.playCard(c, t)})
+        c.set('clickHandler', function(){
+          p.takeCard(c);      
+          socket.emit('card-played', data = {
+            gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
+            card: c
+          });
+        });
         p.giveCard(c);
       });
 
@@ -43,14 +49,44 @@ require(['jquery', 'models/game'], function($, game){
           $('#trumphs-pick').css('visibility', 'visible')
         }
       });
-      
+
+      socket.on('played-card', function(data){
+        console.log(data);
+        t.placeCard(g.createCard(data.card))
+      });
+
       socket.on('trumps-and-next-hand', function(data){
         console.log(data);
         data.hand.forEach(function(card){
           var c = g.createCard(card);
-          c.set('clickHandler', function(){p.playCard(c, t)})
+          c.set('clickHandler', function(){            
+            p.takeCard(c);      
+            socket.emit('card-played', data = {
+              gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
+              card: c
+            })
+          })
           p.giveCard(c);
         });
+      });
+
+      socket.on('cant-play-card', function(data){
+        console.log(data);
+        $('#message').html(data.msg);
+        $('#message').css('visibility', 'visible');
+        setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
+
+        var c = g.createCard(data.card);
+        c.set('clickHandler', function(){
+          p.takeCard(c);      
+          socket.emit('card-played', data = {
+            gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
+            card: c
+          });
+        });
+
+        p.giveCard(c);
+
       });
     });
 

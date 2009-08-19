@@ -5,21 +5,21 @@ html
   body
     #game
       .row
-         div(id='player-'+((playerId+1)%4+1) class="col-md-6 col-md-offset-3 text-center")
+         div(id='player-'+((playerId+1)%4+1) class="col-md-8 col-md-offset-2 player-holder text-center")
            player 1 goes here
 
       .row
-         div(id='player-'+((playerId+2)%4+1) class="col-md-3 text-center")
+         div(id='player-'+((playerId+2)%4+1) class="col-md-2 player-holder text-center")
            player 2 goes here
 
-         div#table-1.col-md-6.text-center
+         div#table-1.col-md-8.text-center
            player 1 goes here
 
-         div(id='player-'+((playerId)%4+1) class="col-md-3 text-center")
+         div(id='player-'+((playerId)%4+1) class="col-md-2 player-holder text-center")
            player 4 goes here
 
       .row
-         div(id='player-'+((playerId+3)%4+1) class="col-md-6 col-md-offset-3 text-center")
+         div(id='player-'+playerId class="col-md-8 col-md-offset-2 local-player-holder text-center")
            player 3 goes here
 
     include game.html
