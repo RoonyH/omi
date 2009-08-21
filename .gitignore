@@ -1,3 +1,4 @@
 *~
 public/*/thirdparty
 test/*/thirdparty
+node_modules/
