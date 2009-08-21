@@ -14,6 +14,21 @@ app.use(express.favicon());
 
 app.get('/game', routes.game);
 
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app);
+var io = require('socket.io')(server);
+
+io.on('connection', function (socket) {
+  console.log('connected!');
+
+  socket.on('start', function (data) {
+    routes.game({gameId: data.gameId}, function(game){
+      console.log(JSON.stringify(game));
+      game.addPlayer(data.playerId, socket.id);
+      socket.emit('game', {hand: game.getPlayerFirstHand(data.playerId)});
+    });
+  });
+});
+
+server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });

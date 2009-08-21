@@ -9,16 +9,22 @@ requirejs.config({
 
 require(['jquery', 'models/game'], function($, game){
   $(function(){
-    g = new game.Game();
-    p = g.createPlayer({id:3, name:'Alex'});
-    t = g.createTable({id: 1});
+    var socket = io.connect('http://localhost');
 
-    $.getJSON('/game', {}, function(data){
+    socket.on('game', function (data) {
+      g = new game.Game();
+      p = g.createPlayer({id:1, name:'Alex'});
+      t = g.createTable({id: 1});
+
+      console.log(data.hand)
+
       data.hand.forEach(function(card){
         var c = g.createCard(card);
         p.giveCard(c);
       });
-    })
+    });
 
+    console.log('hey')
+    socket.emit('start', {gameId:1, playerId:1})
   });
 });
