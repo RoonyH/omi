@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Mocha</title>
+    <link rel="stylesheet" href="thirdparty/mocha.css">
+    <link rel="shortcut icon" href="../favicon.ico">
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="thirdparty/mocha.js"></script>
+    <script src="thirdparty/chai.js"></script>
+
+    <script src="../../public/javascripts/thirdparty/underscore.js"></script>
+    <script src="../../public/javascripts/thirdparty/jquery.min.js"></script>
+    <script src="../../public/javascripts/thirdparty/backbone.js"></script>
+    <script src="../../public/javascripts/thirdparty/mustache.js"></script>
+
+    <script src="../../public/javascripts/models/card.js"></script>
+    <script src="../../public/javascripts/models/table.js"></script>
+    <script src="../../public/javascripts/models/game.js"></script>
+
+    <script>mocha.setup('bdd')</script>
+    <script>expect = chai.expect</script>
+    <script src="tests.js"></script>
+    <script>
+      mocha.run();
+    </script>
+  </body>
+</html>
