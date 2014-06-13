@@ -32,3 +32,14 @@ describe('Game Model', function(){
     expect(model.get('players').length).to.equal(0);
   })
 });
+
+
+describe('Player Model', function(){
+  it('should have defaults', function(){
+    var model = new Player();
+    expect(model).to.be.ok;
+    expect(model.get('id')).to.be.ok;
+    expect(model.get('cards')).to.be.ok;
+    expect(model.get('cards').length).to.equal(0);
+  })
+});
