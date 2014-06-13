@@ -2,3 +2,8 @@ body {
   padding: 3%;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
+
+.img-card {
+  height: 100;
+  width: 70;
+}
