@@ -1,6 +1,8 @@
 var PlayerView = Backbone.View.extend({
 
-  el: $('#player-3'),
+  el: function(){
+    return $('#player-' + this.model.id);
+  },
 
   template: $('#template-player').html(),
 
