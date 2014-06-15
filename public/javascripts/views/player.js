@@ -7,7 +7,7 @@ var PlayerView = Backbone.View.extend({
   template: $('#template-player').html(),
 
   initialize: function() {
-    this.listenTo(this.model, 'card-given', this.givenCard);
+    this.listenTo(this.model.get('cards'), 'add', this.givenCard);
   },
 
   render: function(){
