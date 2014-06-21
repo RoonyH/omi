@@ -8,6 +8,7 @@ var PlayerView = Backbone.View.extend({
 
   initialize: function() {
     this.listenTo(this.model.get('cards'), 'add', this.givenCard);
+    this.listenTo(this.model.get('cards'), 'remove', this.takenCard);
   },
 
   render: function(){
@@ -15,6 +16,11 @@ var PlayerView = Backbone.View.extend({
 
   givenCard: function(card){
     var cardView = new CardView({model: card});
-    this.$el.append(cardView.render().html());
+    this.$('#cards').append(cardView.render());
+  },
+
+  takenCard: function(card){
+    card.remove();
+    this.$('#card-' + card.cid).remove();
   }
 });

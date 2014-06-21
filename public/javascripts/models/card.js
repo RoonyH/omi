@@ -5,6 +5,11 @@ var Card = Backbone.Model.extend({
       value: 0,
       kind: null
     };
+  },
+
+  remove: function() {
+    this.trigger('removed');
+    console.log('removed');
   }
 });
 

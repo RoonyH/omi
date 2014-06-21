@@ -2,7 +2,8 @@ var Game = Backbone.Model.extend({
   defaults: function() {
     return {
       type: 'omi',
-      players: new PlayerCollection()
+      players: new PlayerCollection(),
+      tables: new TableCollection()
     };
   },
 
@@ -12,7 +13,7 @@ var Game = Backbone.Model.extend({
   createCard: function(card){
     var card = new Card(card);
     return card;
-  }
+  },
 
   createPlayer: function(player){
     var player = new Player(player);
@@ -21,12 +22,11 @@ var Game = Backbone.Model.extend({
     return player;
   },
 
-  giveCardToPlayer: function(card, player){
-    this.get('players').get(player).giveCard(card);
-    return card;
-  }
-
-  placeCardOnTable: function(){
-  }
+  createTable: function(table){
+    var table = new Table(table);
+    var tv = new TableView({model: table});
+    this.get('tables').add(table);
+    return table;
+  }  
 });
 

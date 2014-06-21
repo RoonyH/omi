@@ -20,7 +20,7 @@
           player 2 goes here
         </div>
 
-        <div id="table" class="col-md-6 text-center">
+        <div id="table-1" class="col-md-6 text-center">
           the table goes here
         </div>
 
@@ -42,6 +42,14 @@
   <script id="template-card" type="x-tmpl-mustache">
     <img src="{{url}}" class="img-card">
   </script>
+
+  <script id="template-player" type="x-tmpl-mustache">
+    <div id='cards'></div>
+  </script>
+
+  <script id="template-table" type="x-tmpl-mustache">
+    <div id='cards'></div>
+  </script>
   <!--end of templates-->
 
   <!--thirdparty libs-->
@@ -52,6 +60,7 @@
   <!--end of thirdparty libs-->
 
   <script src="javascripts/models/table.js"></script>
+  <script src="javascripts/collections/tables.js"></script>
   <script src="javascripts/models/card.js"></script>
   <script src="javascripts/collections/cards.js"></script>
   <script src="javascripts/models/player.js"></script>
@@ -59,6 +68,7 @@
   <script src="javascripts/models/game.js"></script>
   <script src="javascripts/views/card.js"></script>
   <script src="javascripts/views/player.js"></script>
+  <script src="javascripts/views/table.js"></script>
   <body>
 
 </html>
