@@ -2,6 +2,7 @@ var Player = Backbone.Model.extend({
   defaults: function() {
     return {
       id: 3,
+      name: 'Player',
       cards: new CardCollection()
     };
   },

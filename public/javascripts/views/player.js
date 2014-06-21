@@ -12,6 +12,12 @@ var PlayerView = Backbone.View.extend({
   },
 
   render: function(){
+    var player = {
+      name: this.model.get('name')
+    };
+    this.$el.addClass('player');
+    this.$el.html(Mustache.render(this.template, player));
+    return this.$el;
   },
 
   givenCard: function(card){

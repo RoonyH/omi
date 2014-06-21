@@ -18,6 +18,7 @@ var Game = Backbone.Model.extend({
   createPlayer: function(player){
     var player = new Player(player);
     var pv = new PlayerView({model: player});
+    pv.render();
     this.get('players').add(player);
     return player;
   },
@@ -25,6 +26,7 @@ var Game = Backbone.Model.extend({
   createTable: function(table){
     var table = new Table(table);
     var tv = new TableView({model: table});
+    tv.render();
     this.get('tables').add(table);
     return table;
   }  

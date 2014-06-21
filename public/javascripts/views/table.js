@@ -11,6 +11,11 @@ var TableView = Backbone.View.extend({
   },
 
   render: function(){
+    var table = {
+      name: this.model.get('name')
+    };
+    this.$el.html(Mustache.render(this.template, table));
+    return this.$el;
   },
 
   placedCard: function(card){
