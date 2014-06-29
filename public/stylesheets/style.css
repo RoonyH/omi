@@ -4,8 +4,8 @@ body {
 }
 
 .img-card {
-  height: 130;
-  width: 90;
+  height: 110;
+  width: 70;
 }
 
 .card{
@@ -14,4 +14,10 @@ body {
 
 .player{
   background: antiquewhite;
+  padding: 15px;
+}
+
+.game-table{
+  background: gray;
+  padding: 15px;
 }

@@ -1,32 +1,39 @@
-var PlayerView = Backbone.View.extend({
+define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
 
-  el: function(){
-    return $('#player-' + this.model.id);
-  },
+  var PlayerView = Backbone.View.extend({
 
-  template: $('#template-player').html(),
+    el: function(){
+      return $('#player-' + this.model.id);
+    },
 
-  initialize: function() {
-    this.listenTo(this.model.get('cards'), 'add', this.givenCard);
-    this.listenTo(this.model.get('cards'), 'remove', this.takenCard);
-  },
+    template: $('#template-player').html(),
 
-  render: function(){
-    var player = {
-      name: this.model.get('name')
-    };
-    this.$el.addClass('player');
-    this.$el.html(Mustache.render(this.template, player));
-    return this.$el;
-  },
+    initialize: function() {
+      this.listenTo(this.model.get('cards'), 'add', this.givenCard);
+      this.listenTo(this.model.get('cards'), 'remove', this.takenCard);
+    },
 
-  givenCard: function(card){
-    var cardView = new CardView({model: card});
-    this.$('#cards').append(cardView.render());
-  },
+    render: function(){
+      var player = {
+        name: this.model.get('name')
+      };
+      this.$el.addClass('player');
+      this.$el.html(Mustache.render(this.template, player));
+      return this.$el;
+    },
 
-  takenCard: function(card){
-    card.remove();
-    this.$('#card-' + card.cid).remove();
+    givenCard: function(card){
+      var cv = new cardView.CardView({model: card});
+      this.$('#cards').append(cv.render());
+    },
+
+    takenCard: function(card){
+      card.remove();
+      this.$('#card-' + card.cid).remove();
+    }
+  });
+
+  return {
+    PlayerView: PlayerView
   }
 });

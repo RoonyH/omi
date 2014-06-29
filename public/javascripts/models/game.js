@@ -1,34 +1,38 @@
-var Game = Backbone.Model.extend({
-  defaults: function() {
-    return {
-      type: 'omi',
-      players: new PlayerCollection(),
-      tables: new TableCollection()
-    };
-  },
+define(["jquery", "backbone", "models/card", "models/player", "models/table", "collections/players", "collections/tables"], 
+      function($, Backbone, cardModel, playerModel, tableModel, playerCollection, tableCollection) {
 
-  getPlayerById: function(id){
-  },
+  var Game = Backbone.Model.extend({
+    defaults: function() {
+      return {
+        type: 'omi',
+        players: new playerCollection.PlayerCollection(),
+        tables: new tableCollection.TableCollection()
+      };
+    },
 
-  createCard: function(card){
-    var card = new Card(card);
-    return card;
-  },
+    getPlayerById: function(id){
+    },
 
-  createPlayer: function(player){
-    var player = new Player(player);
-    var pv = new PlayerView({model: player});
-    pv.render();
-    this.get('players').add(player);
-    return player;
-  },
+    createCard: function(card){
+      var card = new cardModel.Card(card);
+      return card;
+    },
 
-  createTable: function(table){
-    var table = new Table(table);
-    var tv = new TableView({model: table});
-    tv.render();
-    this.get('tables').add(table);
-    return table;
-  }  
+    createPlayer: function(player){
+      var player = new playerModel.Player(player);
+      this.get('players').add(player);
+      return player;
+    },
+
+    createTable: function(table){
+      var table = new tableModel.Table(table);
+      this.get('tables').add(table);
+      return table;
+    }  
+  });
+  
+  return {
+    Game: Game
+  };
 });
 

@@ -1,3 +1,9 @@
-var TableCollection = Backbone.Collection.extend({
-  
+define(['jquery', 'backbone'], function($, Backbone){
+  var TableCollection = Backbone.Collection.extend({
+    
+  });
+
+  return {
+    TableCollection: TableCollection
+  }
 });
