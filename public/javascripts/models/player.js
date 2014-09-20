@@ -9,13 +9,7 @@ define(["backbone", "views/player", "collections/cards"],
       };
     },
 
-    initialize: function(){
-      var pv = new playerView.PlayerView({model: this});
-      pv.render();
-    },
-
     giveCard: function(card) {
-      card.set('player', this);
       this.get('cards').add(card);
       console.log('card: ' + card.get('kind') + card.get('value') +
                   ' given to the player: ' + this.get('id'));

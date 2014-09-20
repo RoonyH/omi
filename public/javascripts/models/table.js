@@ -1,5 +1,5 @@
-define(["backbone", "views/table", "collections/cards"],
-       function(Backbone, tableView, cardCollection) {
+define(["backbone", "collections/cards"],
+       function(Backbone, cardCollection) {
 
   var Table = Backbone.Model.extend({
     defaults: function() {
@@ -8,11 +8,6 @@ define(["backbone", "views/table", "collections/cards"],
         name: 'Table',
         cards: new cardCollection.CardCollection()
       };
-    },
-
-    initialize: function(){
-      var tv = new tableView.TableView({model: this});
-      tv.render();
     },
 
     placeCard: function(card) {
