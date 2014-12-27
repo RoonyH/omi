@@ -9,7 +9,7 @@ requirejs.config({
 
 require(['jquery', 'models/game'], function($, game){
   $(function(){
-    var socket = io.connect('http://localhost');
+    socket = io.connect('http://localhost');
 
     socket.on('game', function (data) {
       g = new game.Game();
@@ -22,9 +22,15 @@ require(['jquery', 'models/game'], function($, game){
         var c = g.createCard(card);
         p.giveCard(c);
       });
+
+      socket.on('other-player-got-first-hand', function(data){
+        console.log(data);
+        var pl = g.createPlayer({id:data.id, name:'Alex'});
+        var c = g.createCard();
+        pl.giveCard(c);
+      });
     });
 
-    console.log('hey')
     socket.emit('start', {gameId:1, playerId:1})
   });
 });

@@ -24,8 +24,10 @@ io.on('connection', function (socket) {
     routes.game({gameId: data.gameId}, function(game){
       console.log(JSON.stringify(game));
       game.addPlayer(data.playerId, socket.id);
-      game.connectOtherPlayers(data.playerId, function(arr){
-        console.log(arr);
+      game.connectOtherPlayers(data.playerId, function(playerConArr){
+        playerConArr.forEach(function(con){
+          io.to(con).emit('other-player-got-first-hand', {id: data.playerId});
+        });
       });
       socket.emit('game', {hand: game.getPlayerFirstHand(data.playerId)});
     });
