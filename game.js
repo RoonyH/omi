@@ -7,10 +7,26 @@ function getGame(id, callback){
 
   client.get('deck-'+id, function(err, deck){
     if(deck){
-      deck = JSON.parse(deck);
+      var deck = JSON.parse(deck);
     }
-    var game = new Game(id, deck);
-    callback(game);
+    
+    client.lrange('players-'+id, 0, -1, function(err, players){
+      console.log(players)
+
+      ps = null;
+
+      if(players.length){
+        var ps = [];
+        console.log(players)
+        players.forEach(function(player, i){
+          var player = JSON.parse(player);
+          ps.push(player.connectionId);
+        });
+      }
+
+      var game = new Game(id, deck, null, ps);
+      callback(game);
+    });
   });
 }
 
@@ -51,7 +67,8 @@ Game.prototype.createDeck = function(){
 }
 
 Game.prototype.createPlayers = function(){
-  client.lpush('players-'+this.id, ['nil', 'nil', 'nil', 'nil']);
+  console.log('creating empty players')
+  client.lpush('players-'+this.id, '{}', '{}', '{}', '{}');
   this.players = [];
 }
 
@@ -76,12 +93,41 @@ Game.prototype.addPlayer = function(id, connectionId){
   });
 }
 
-Game.prototype.connectPlayer = function(id){
+// calls the callback function with the argument 'connectionId' of the player
+// with the pid specified by param'id'.
+// can be used to contact the player.
+Game.prototype.connectPlayer = function(id, callback){
+  console.log('connecting player: ' + id);
 
+  client.lrange('players-'+this.id, (id-1), (id-1), function(err, player){
+    if(err)
+      throw err;
+    var player = JSON.parse(player);
+    callback(player.connectionId);
+  });
 }
 
-Game.prototype.connectOtherPlayers = function(id){
+// just like the 'connectPlayer' method, except callback called with
+// 'connectionId's of players other than the specified.
+Game.prototype.connectOtherPlayers = function(id, callback){
+  console.log('connecting other players: ' + id);
 
+  client.lrange('players-'+this.id, 0, 3, function(err, players){
+    if(err)
+      throw err;
+      
+    var conns = [];
+    console.log('aa mennaa')
+    console.log(players)
+    players.forEach(function(player, i){
+      if(player!='nil'){
+        var player = JSON.parse(player);
+        if(player.id && player.id!=id)
+          conns.push(player.connectionId);
+      }
+    });
+    callback(conns);
+  });
 }
 
 exports.getGame = getGame;
