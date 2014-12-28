@@ -1,0 +1,8 @@
+html
+  head
+    link(rel='stylesheet', href='stylesheets/thirdparty/bootstrap.min.css')
+    link(rel='stylesheet', href='stylesheets/style.css')
+  body
+    include game.html
+    script.
+      var omiGameConf = !{JSON.stringify({gameId: gameId, playerId: playerId})}

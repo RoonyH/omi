@@ -9,10 +9,12 @@ var app = express();
 
 app.set('port', process.env.PORT || 3001);
 app.use(express.static(path.join(__dirname, 'public')));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
 
 app.use(express.favicon());
 
-app.get('/game', routes.game);
+app.get('/', routes.index);
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);

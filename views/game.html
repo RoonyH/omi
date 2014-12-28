@@ -1,0 +1,57 @@
+
+
+    <div id="game">
+
+      <div class="row">
+        <div id="player-1" class="col-md-6 col-md-offset-3 text-center">
+          player 1 goes here
+        </div>
+      </div>
+
+      <div class="row">
+
+        <div id="player-2" class="col-md-3 text-center">
+          player 2 goes here
+        </div>
+
+        <div id="table-1" class="col-md-6 text-center">
+          the table goes here
+        </div>
+
+        <div id="player-4" class="col-md-3 text-center">
+          player 4 goes here
+        </div>
+
+      </div>
+
+      <div class="row">
+        <div id="player-3" class="col-md-6 col-md-offset-3 text-center">
+          player 3 goes here
+        </div>
+      </div>
+
+    </div>
+
+    <!--templates-->
+    <script id="template-card" type="x-tmpl-mustache">
+      <img src="{{url}}" class="img-card">
+    </script>
+
+    <script id="template-player" type="x-tmpl-mustache">
+      <lable>{{name}}</lable>
+      <div id='cards'></div>
+    </script>
+
+    <script id="template-table" type="x-tmpl-mustache">
+      <lable>{{name}}</lable>
+      <div id='cards'></div>
+    </script>
+    <!--end of templates-->
+
+    <!--thirdparty libs-->
+    <script src="javascripts/thirdparty/mustache.js"></script>
+    <!--end of thirdparty libs-->
+
+    <script data-main="javascripts/app.js" src="javascripts/thirdparty/socket.io-1.1.0.js"></script>
+    <script data-main="javascripts/app.js" src="javascripts/require.js"></script>
+

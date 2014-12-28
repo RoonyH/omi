@@ -2,13 +2,25 @@ var redis = require('redis')
 
 var client = redis.createClient();
 
+
+function registerGame(callback){
+  client.incr('omi-games', function(err, id){
+    callback(id);
+  });
+}
+
+
+function registerPlayer(gameId, callback){
+  client.incr('omi-players-' + gameId, function(err, id){
+    callback(id);
+  });
+}
+
+
 function getGame(id, callback){
   console.log('looking for game: ' + id);
 
-  client.get('deck-'+id, function(err, deck){
-    if(deck){
-      var deck = JSON.parse(deck);
-    }
+  createDeck(id, function(deck){
     
     client.lrange('players-'+id, 0, -1, function(err, players){
       console.log(players)
@@ -30,13 +42,39 @@ function getGame(id, callback){
   });
 }
 
+function createDeck(id, callback){
+  console.log('creating deck');
+
+  client.get('deck-'+id, function(err, deck){
+    if(deck){
+      var deck = JSON.parse(deck);
+      callback(deck);
+      return;
+    } else {
+
+      var kinds = ['c', 'd', 'h', 's'];
+      var values = [1, 7, 8, 9, 10, 11, 12, 13];
+
+      var deck = [];
+
+      kinds.forEach(function(kind){
+        values.forEach(function(value){
+          deck.push({kind: kind, value: value});
+        });
+      });
+
+      client.set('deck-'+id, JSON.stringify(deck), function(){
+        callback(deck);
+        return;
+      });
+    }
+  });
+}
+
 
 function Game(id, deck, table, players){
   this.id = id;
-  if(deck)
-    this.deck = deck;
-  else
-    this.createDeck();
+  this.deck = deck;
   this.table = [];
   if(players)
     this.players = players;
@@ -46,24 +84,6 @@ function Game(id, deck, table, players){
 
 Game.prototype.start = function(){
   this.players
-}
-
-Game.prototype.createDeck = function(){
-  console.log('creating deck')
-
-  var kinds = ['c', 'd', 'h', 's'];
-  var values = [1, 7, 8, 9, 10, 11, 12, 13];
-
-  var deck = [];
-
-  kinds.forEach(function(kind){
-    values.forEach(function(value){
-      deck.push({kind: kind, value: value});
-    });
-  });
-
-  this.deck = deck;
-  client.set('deck-'+this.id, JSON.stringify(deck))
 }
 
 Game.prototype.createPlayers = function(){
@@ -131,3 +151,5 @@ Game.prototype.connectOtherPlayers = function(id, callback){
 }
 
 exports.getGame = getGame;
+exports.registerGame = registerGame;
+exports.registerPlayer = registerPlayer

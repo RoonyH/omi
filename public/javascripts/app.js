@@ -13,7 +13,7 @@ require(['jquery', 'models/game'], function($, game){
 
     socket.on('game', function (data) {
       g = new game.Game();
-      p = g.createPlayer({id:1, name:'Alex'});
+      p = g.createPlayer({id: omiGameConf.playerId, name:'Alex'});
       t = g.createTable({id: 1});
 
       console.log(data.hand)
@@ -31,6 +31,6 @@ require(['jquery', 'models/game'], function($, game){
       });
     });
 
-    socket.emit('start', {gameId:1, playerId:1})
+    socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
   });
 });
