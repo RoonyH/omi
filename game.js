@@ -5,7 +5,11 @@ var client = redis.createClient();
 
 function registerGame(callback){
   client.incr('omi-games', function(err, id){
-    callback(id);
+    createDeck(id, function(){
+      createPlayers(id, function(){
+        callback(id);
+      });
+    });
   });
 }
 
@@ -20,27 +24,52 @@ function registerPlayer(gameId, callback){
 function getGame(id, callback){
   console.log('looking for game: ' + id);
 
-  createDeck(id, function(deck){
-    
-    client.lrange('players-'+id, 0, -1, function(err, players){
-      console.log(players)
+  getDeck(id, function(err, deck){
+    if(err)
+      throw err;
+  
+    getPlayers(id, function(err, players){
+      if(err)
+        throw err;    
 
-      ps = null;
-
-      if(players.length){
-        var ps = [];
-        console.log(players)
-        players.forEach(function(player, i){
-          var player = JSON.parse(player);
-          ps.push(player.connectionId);
-        });
-      }
-
-      var game = new Game(id, deck, null, ps);
+      var game = new Game(id, deck, null, players);
       callback(game);
     });
   });
 }
+
+
+function getDeck(id, callback){
+  console.log('getting deck');
+
+  client.get('deck-'+id, function(err, deck){
+    if(deck){
+      var deck = JSON.parse(deck);
+      callback(err, deck);
+      return;
+    } else {
+      callback("No deck for id: " + id);
+    }
+  });
+}
+
+
+function getPlayers(id, callback){
+  client.lrange('players-'+id, 0, -1, function(err, players){
+    console.log(players)
+    if(players.length){
+      var ps = [];
+      players.forEach(function(player, i){
+        var player = JSON.parse(player);
+        ps.push(player.connectionId);
+      });
+      callback(err, ps);
+    } else {
+      callback("No players for id: " + id);
+    }
+  });
+}
+
 
 function createDeck(id, callback){
   console.log('creating deck');
@@ -72,24 +101,23 @@ function createDeck(id, callback){
 }
 
 
+function createPlayers(id, callback){
+  console.log('creating empty players')
+  client.lpush('players-'+id, '{}', '{}', '{}', '{}', function(err, num){
+    callback(err, []);
+  });
+}
+
+
 function Game(id, deck, table, players){
   this.id = id;
   this.deck = deck;
   this.table = [];
-  if(players)
-    this.players = players;
-  else
-    this.createPlayers();
+  this.players = players;
 }
 
 Game.prototype.start = function(){
   this.players
-}
-
-Game.prototype.createPlayers = function(){
-  console.log('creating empty players')
-  client.lpush('players-'+this.id, '{}', '{}', '{}', '{}');
-  this.players = [];
 }
 
 Game.prototype.getPlayerFirstHand = function(playerId){
