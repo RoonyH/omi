@@ -16,18 +16,27 @@ require(['jquery', 'models/game'], function($, game){
       p = g.createPlayer({id: omiGameConf.playerId, name:'Alex'});
       t = g.createTable({id: 1});
 
-      console.log(data.hand)
-
       data.hand.forEach(function(card){
         var c = g.createCard(card);
         p.giveCard(c);
       });
 
+      data.players.forEach(function(player){
+        console.log(player);
+        var p = g.createPlayer(player);
+        for(var i=0; i<4; i++){
+          var c = g.createCard();
+          p.giveCard(c);
+        }
+      });
+
       socket.on('other-player-got-first-hand', function(data){
         console.log(data);
         var pl = g.createPlayer({id:data.id, name:'Alex'});
-        var c = g.createCard();
-        pl.giveCard(c);
+        for(var i=0; i<4; i++){
+          var c = g.createCard();
+          pl.giveCard(c);
+        }
       });
     });
 

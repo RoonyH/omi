@@ -61,7 +61,13 @@ function getPlayers(id, callback){
       var ps = [];
       players.forEach(function(player, i){
         var player = JSON.parse(player);
-        ps.push(player.connectionId);
+        if(player){
+          ps.push({
+            connectionId: player.connectionId,
+            id: player.id,
+            name: player.name
+          });
+        }
       });
       callback(err, ps);
     } else {
@@ -103,7 +109,7 @@ function createDeck(id, callback){
 
 function createPlayers(id, callback){
   console.log('creating empty players')
-  client.lpush('players-'+id, '{}', '{}', '{}', '{}', function(err, num){
+  client.lpush('players-'+id, null, null, null, null, function(err, num){
     callback(err, []);
   });
 }
@@ -130,10 +136,10 @@ Game.prototype.getPlayerSecondHand = function(playerId){
   return this.deck.slice(16 + (playerId-1)*4, 16 + (playerId-1)*4+4);
 }
 
-Game.prototype.addPlayer = function(id, connectionId){
+Game.prototype.addPlayer = function(id, connectionId, name){
   console.log('adding player: ' + id + ' to game: ' + this.id);
 
-  player = {id: id, connectionId: connectionId};
+  player = {id: id, connectionId: connectionId, name: name};
   this.players.push(player);
   client.lset('players-'+this.id, (id-1), JSON.stringify(player), function(err, players){
     if(err)
@@ -165,11 +171,10 @@ Game.prototype.connectOtherPlayers = function(id, callback){
       throw err;
       
     var conns = [];
-    console.log('aa mennaa')
     console.log(players)
     players.forEach(function(player, i){
-      if(player!='nil'){
-        var player = JSON.parse(player);
+      var player = JSON.parse(player);
+      if(player){
         if(player.id && player.id!=id)
           conns.push(player.connectionId);
       }

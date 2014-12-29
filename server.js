@@ -25,13 +25,25 @@ io.on('connection', function (socket) {
   socket.on('start', function (data) {
     routes.game({gameId: data.gameId}, function(game){
       console.log(JSON.stringify(game));
-      game.addPlayer(data.playerId, socket.id);
+      var players = [];
+      
+      game.players.forEach(function(p){
+        players.push(p);
+      });
+      
+      game.addPlayer(data.playerId, socket.id, data.name);
       game.connectOtherPlayers(data.playerId, function(playerConArr){
         playerConArr.forEach(function(con){
           io.to(con).emit('other-player-got-first-hand', {id: data.playerId});
         });
       });
-      socket.emit('game', {hand: game.getPlayerFirstHand(data.playerId)});
+
+      gameDetails = {
+        hand: game.getPlayerFirstHand(data.playerId),
+        players: players
+      }
+
+      socket.emit('game', gameDetails);
     });
   });
 });
