@@ -26,11 +26,11 @@ io.on('connection', function (socket) {
     routes.game({gameId: data.gameId}, function(game){
       console.log(JSON.stringify(game));
       var players = [];
-      
+
       game.players.forEach(function(p){
         players.push(p);
       });
-      
+
       game.addPlayer(data.playerId, socket.id, data.name);
       game.connectOtherPlayers(data.playerId, function(playerConArr){
         playerConArr.forEach(function(con){
@@ -45,6 +45,22 @@ io.on('connection', function (socket) {
 
       socket.emit('game', gameDetails);
     });
+  });
+
+  socket.on('trumps-picked', function(data){
+    console.log('trumps')
+    console.log(data);
+
+    routes.trumpsPicked(data, function(game){
+      game.players.forEach(function(player){
+        details = {
+          trumps: data.trumps,
+          hand: game.getPlayerSecondHand(player.id)
+        };
+
+        io.to(player.connectionId).emit('trumps-and-next-hand', details);
+      });
+    })
   });
 });
 

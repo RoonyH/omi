@@ -38,6 +38,14 @@ require(['jquery', 'models/game'], function($, game){
           pl.giveCard(c);
         }
       });
+      
+      socket.on('trumps-and-next-hand', function(data){
+        console.log(data);
+        data.hand.forEach(function(card){
+          var c = g.createCard(card);
+          p.giveCard(c);
+        });
+      });
     });
 
     socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})

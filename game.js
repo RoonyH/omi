@@ -7,7 +7,9 @@ function registerGame(callback){
   client.incr('omi-games', function(err, id){
     createDeck(id, function(){
       createPlayers(id, function(){
-        callback(id);
+        setTrumps(id, {playerId: 1}, function(){
+          callback(id);
+        });
       });
     });
   });
@@ -115,6 +117,29 @@ function createPlayers(id, callback){
 }
 
 
+function setTrumps(id, trumps, callback){
+  console.log('setting trumps: ' + trumps);
+  client.set('trumps-'+id, JSON.stringify(trumps), function(err, t){
+    if(err)
+      throw err;
+    callback(t);
+  });
+}
+
+
+function getTrumps(id, callback){
+  console.log('getting trumps for: ' + id);
+  client.get('trumps-'+id, function(err, trumps){
+    if(err)
+      throw err;
+    if(trumps)
+      callback(JSON.parse(trumps));
+    else
+      throw "No trumps set";
+  });
+}
+
+
 function Game(id, deck, table, players){
   this.id = id;
   this.deck = deck;
@@ -185,4 +210,6 @@ Game.prototype.connectOtherPlayers = function(id, callback){
 
 exports.getGame = getGame;
 exports.registerGame = registerGame;
-exports.registerPlayer = registerPlayer
+exports.registerPlayer = registerPlayer;
+exports.setTrumps = setTrumps;
+exports.getTrumps = getTrumps;
