@@ -38,11 +38,7 @@ define(['jquery', 'backbone'], function($, Backbone){
     },
     
     clicked: function(){
-      this.clickHandler(this.model);
-    },
-
-    clickHandler: function(card){
-      console.log('Card: ' + card.get('kind')+card.get('value'))
+      this.model.get('clickHandler')(this.model);
     }
   });
 

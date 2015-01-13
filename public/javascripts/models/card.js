@@ -4,7 +4,8 @@ define(["backbone"], function(Backbone) {
       return {
         name: 'unknown',
         value: 0,
-        kind: null
+        kind: null,
+        clickHandler: function(){console.log("clicked: "+this.kind+" "+this.value)}
       };
     },
 
