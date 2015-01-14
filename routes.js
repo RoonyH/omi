@@ -37,18 +37,27 @@ exports.game = function(opt, callback){
 exports.trumpsPicked = function(data, callback){
   gameModule.getTrumps(data.gameId, function(t){
     if(t.playerId == data.playerId){
+
+      trumphKind = {
+        Clubs: "c",
+        Hearts: "h",
+        Spades: "s",
+        Diamonds: "d"
+      }
+
       opt = {
         gameId: data.gameId,
-        playerId: data.playerId
+        playerId: data.playerId,
+        kind: trumphKind[data.trumphs]
       }
     
       gameModule.setTrumps(data.gameId, opt, function(){
         gameModule.getGame(data.gameId, function(game){
-          callback(game);
+          callback(null, game);
         });
       });
     } else {
-      throw "You are not the player to pick trumps";
+      callback("You are not the player to pick trumps", null);
     }
   });
 }

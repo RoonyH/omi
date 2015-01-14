@@ -3,6 +3,26 @@ html
     link(rel='stylesheet', href='stylesheets/thirdparty/bootstrap.min.css')
     link(rel='stylesheet', href='stylesheets/style.css')
   body
+    #game
+      .row
+         div(id='player-'+((playerId+1)%4+1) class="col-md-6 col-md-offset-3 text-center")
+           player 1 goes here
+
+      .row
+         div(id='player-'+((playerId+2)%4+1) class="col-md-3 text-center")
+           player 2 goes here
+
+         div#table-1.col-md-6.text-center
+           player 1 goes here
+
+         div(id='player-'+((playerId)%4+1) class="col-md-3 text-center")
+           player 4 goes here
+
+      .row
+         div(id='player-'+((playerId+3)%4+1) class="col-md-6 col-md-offset-3 text-center")
+           player 3 goes here
+
     include game.html
+
     script.
       var omiGameConf = !{JSON.stringify({gameId: gameId, playerId: playerId})}

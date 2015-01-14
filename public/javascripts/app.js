@@ -12,8 +12,10 @@ require(['jquery', 'models/game'], function($, game){
     socket = io.connect('http://localhost');
 
     socket.on('game', function (data) {
-      var g = new game.Game();
-      var p = g.createPlayer({id: omiGameConf.playerId, name:'Alex'});
+      g = new game.Game();
+      p = g.createPlayer({
+        id: omiGameConf.playerId, name:'Alex', trumpher: data.trumpher
+      });
       var t = g.createTable({id: 1});
 
       data.hand.forEach(function(card){
@@ -37,6 +39,9 @@ require(['jquery', 'models/game'], function($, game){
           var c = g.createCard(); //create unknown cards
           pl.giveCard(c);
         }
+        if(p.get('trumpher') && (g.get('players').length==4)){
+          $('#trumphs-pick').css('visibility', 'visible')
+        }
       });
       
       socket.on('trumps-and-next-hand', function(data){
@@ -48,6 +53,17 @@ require(['jquery', 'models/game'], function($, game){
         });
       });
     });
+
+    $('.trumph-button').click(function(){
+      console.log($(this).html())
+      
+      socket.emit('trumphs-picked', data = {
+        gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
+        trumphs: $(this).html()
+      })
+      
+      $('#trumphs-pick').css('visibility', 'hidden')
+    })
 
     socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
   });

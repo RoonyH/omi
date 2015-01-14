@@ -40,21 +40,27 @@ io.on('connection', function (socket) {
 
       gameDetails = {
         hand: game.getPlayerFirstHand(data.playerId),
-        players: players
+        players: players,
+        trumpher: data.playerId == 1
       }
 
       socket.emit('game', gameDetails);
     });
   });
 
-  socket.on('trumps-picked', function(data){
+  socket.on('trumphs-picked', function(data){
     console.log('trumps')
     console.log(data);
 
-    routes.trumpsPicked(data, function(game){
+    routes.trumpsPicked(data, function(err, game){
+      if(err){
+        socket.emit("error", {msg: err});
+        return;
+      }
+      
       game.players.forEach(function(player){
         details = {
-          trumps: data.trumps,
+          trumphs: data.trumphs,
           hand: game.getPlayerSecondHand(player.id)
         };
 
