@@ -1,4 +1,4 @@
 *~
-public/*/thirdparty
-test/*/thirdparty
+#public/*/thirdparty
+#test/*/thirdparty
 node_modules/
