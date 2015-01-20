@@ -1,0 +1,18 @@
+{
+  "name": "omi",
+  "version": "0.0.01",
+  "description": "push notification service",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "redis": "0.12.1",
+    "socket.io": "1.1.0",
+    "express": "3.4.8",
+    "jade": "1.3.1",
+    "underscore": "1.7.0"
+  },
+  "devDependencies": {
+  },
+  "author": "Aruna Herath",
+  "license": "BSD-2-Clause"
+}
