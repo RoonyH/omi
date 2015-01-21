@@ -9,7 +9,12 @@ exports.index = function(req, res){
 
   res.cookie('test', 'value')
 
-  if(query.gameId){
+  if(!query.gameId){
+    res.render('index')
+    return
+  }
+
+  if(query.gameId!='new'){
     var gameId = parseInt(query.gameId);
   
     gameModule.registerPlayer(gameId, function(playerId, sec){

@@ -1,0 +1,9 @@
+html
+  head
+    link(rel='stylesheet', href='stylesheets/thirdparty/bootstrap.min.css')
+    link(rel='stylesheet', href='stylesheets/style.css')
+  body
+    ="Create a game or join one of following games"
+    form(action="/")
+      input(type="hidden" name="gameId" value="new")
+      input(type="submit" value="Create a game")
