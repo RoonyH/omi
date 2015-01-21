@@ -15,6 +15,7 @@ app.use(express.cookieParser());
 app.use(express.favicon());
 
 app.get('/', routes.index);
+app.post('/', routes.index);
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);
