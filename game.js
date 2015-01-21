@@ -1,7 +1,11 @@
 var redis = require('redis')
 var crypto = require('crypto');
 
-var client = redis.createClient();
+var client = redis.createClient('redis-port', 'redis-host');
+
+client.auth("redis-pass", function(){
+  console.log("authenticated!")
+})
 
 
 function registerGame(callback){
