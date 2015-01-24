@@ -9,6 +9,7 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
 
     initialize: function() {
       this.listenTo(this.model.get('cards'), 'add', this.placedCard);
+      this.listenTo(this.model.get('cards'), 'reset', this.clear);
     },
 
     render: function(){
@@ -22,7 +23,11 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
 
     placedCard: function(card){
       var cv = new cardView.CardView({model: card});
-      this.$el.append(cv.render().html());
+      this.$el.append(cv.render());
+    },
+    
+    clear: function(){  
+      this.$el.html('');
     }
   });
 

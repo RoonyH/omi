@@ -96,6 +96,13 @@ exports.cardPlayed = function(data, callback){
     return index;
   }
 
+  gameModule.getTurn(gameId, function(turn){
+
+    if(playerId!=turn){
+      callback("Not your turn");
+      return;
+    }
+
   gameModule.getHand(gameId, playerId, function(hand){
     console.log(JSON.stringify(hand))
   
@@ -114,8 +121,14 @@ exports.cardPlayed = function(data, callback){
 
           hand.splice(index, 1);
           gameModule.setHand(gameId, playerId, hand, function(){
-            gameModule.getGame(data.gameId, function(game){
-              callback(null, game);
+            gameModule.setTurn(gameId, (turn%4)+1, function(){
+              gameModule.addToTable(data.gameId, card, function(game){
+                gameModule.getGame(data.gameId, function(game){
+                  checkWinner(data.gameId, function(winner){
+                    callback(null, game, winner);
+                  })
+                });
+              });
             });
           });
 
@@ -125,8 +138,14 @@ exports.cardPlayed = function(data, callback){
 
           hand.splice(index, 1);
           gameModule.setHand(gameId, playerId, hand, function(){
-            gameModule.getGame(data.gameId, function(game){
-              callback(null, game);
+            gameModule.setTurn(gameId, (turn%4)+1, function(){
+              gameModule.addToTable(data.gameId, card, function(game){
+                gameModule.getGame(data.gameId, function(game){
+                  checkWinner(data.gameId, function(winner){
+                    callback(null, game, winner);
+                  })
+                });
+              });
             });
           });
 
@@ -144,8 +163,20 @@ exports.cardPlayed = function(data, callback){
 
           hand.splice(index, 1);
           gameModule.setHand(gameId, playerId, hand, function(){
-            gameModule.getGame(data.gameId, function(game){
-              callback(null, game);
+            gameModule.setTurn(gameId, (turn%4)+1, function(){
+              gameModule.addToTable(data.gameId, card, function(game){
+                gameModule.getGame(data.gameId, function(game){
+                  checkWinner(data.gameId, function(winner){
+                    if(winner){
+                      gameModule.resetTable(data.gameId, winner, function(){
+                        callback(null, game, winner);
+                      })
+                      return;
+                    }
+                    callback(null, game, winner);
+                  })
+                });
+              });
             });
           });
 
@@ -153,4 +184,17 @@ exports.cardPlayed = function(data, callback){
       }
     });
   });
+  });
+  
+  function checkWinner(gameId, callback){
+    gameModule.getTrumps(gameId, function(trumps){
+      gameModule.getTable(gameId, function(table){
+        if(table.length==4){
+          callback(1);
+        } else {
+          callback(null);
+        }
+      })
+    });
+  }
 }

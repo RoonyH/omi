@@ -8,7 +8,6 @@ define(['jquery', 'backbone'], function($, Backbone){
 
     render: function(){
       var card = {url: this.getUrl()};
-      this.el.id = 'card-' + this.model.cid;
       this.$el.addClass('card');
       this.$el.html(Mustache.render(this.template, card));
       return this.$el;

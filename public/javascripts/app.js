@@ -16,7 +16,7 @@ require(['jquery', 'models/game'], function($, game){
       p = g.createPlayer({
         id: omiGameConf.playerId, name:'Alex', trumpher: data.trumpher
       });
-      var t = g.createTable({id: 1});
+      t = g.createTable({id: 1});
 
       data.hand.forEach(function(card){
         var c = g.createCard(card);
@@ -32,19 +32,12 @@ require(['jquery', 'models/game'], function($, game){
 
       data.players.forEach(function(player){
         var p = g.createPlayer(player);
-        for(var i=0; i<4; i++){
-          var c = g.createCard(); //create unknown cards
-          p.giveCard(c);
-        }
       });
 
       socket.on('other-player-got-first-hand', function(data){
         console.log(data);
         var pl = g.createPlayer({id:data.id, name:'Alex'});
-        for(var i=0; i<4; i++){
-          var c = g.createCard(); //create unknown cards
-          pl.giveCard(c);
-        }
+
         if(p.get('trumpher') && (g.get('players').length==4)){
           $('#trumphs-pick').css('visibility', 'visible')
         }
@@ -53,6 +46,14 @@ require(['jquery', 'models/game'], function($, game){
       socket.on('played-card', function(data){
         console.log(data);
         t.placeCard(g.createCard(data.card))
+        if(data.winner){
+          setTimeout(function(){
+            $('#message').html('p 1 dinuwa yako!');
+            $('#message').css('visibility', 'visible');
+            setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
+            t.clear();
+          })
+        }
       });
 
       socket.on('trumps-and-next-hand', function(data){

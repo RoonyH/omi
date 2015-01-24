@@ -8,9 +8,11 @@ function registerGame(callback){
   client.incr('omi-games', function(err, id){
     createDeck(id, function(deck){
       addInitialHands(id, deck);
-      createPlayers(id, function(){
-        setTrumps(id, {playerId: 1}, function(){
-          callback(id);
+      setTurn(id, 1, function(){;
+        createPlayers(id, function(){
+          setTrumps(id, {playerId: 1}, function(){
+            callback(id);
+          });
         });
       });
     });
@@ -19,9 +21,9 @@ function registerGame(callback){
 
 
 function registerPlayer(gameId, callback){
-  client.incr('omi-players-' + gameId, function(err, id){
+  client.incr('g'+gameId+'pc' + gameId, function(err, id){
     sec = random();
-    client.set('pl-sec-'+gameId+id, sec, function(err){
+    client.set('g'+gameId+'p'+id+'sec', sec, function(err){
       callback(id, sec);
     })
   });
@@ -34,7 +36,7 @@ function random(){
 
 
 function validateUser(gameId, playerId, entered_sec, callback){
-  client.get('pl-sec-'+gameId+id, function(err, sec){
+  client.get('g'+gameId+'p'+id+'sec', function(err, sec){
     if(sec===entered_sec)
       callback(true);
     else
@@ -210,6 +212,50 @@ function getTrumps(id, callback){
 }
 
 
+function setTurn(gameId, turn, callback){
+  client.set('g'+gameId+'turn', turn, function(){
+    callback(turn);
+    return;
+  });
+}
+
+
+function getTurn(gameId, callback){
+  client.get('g'+gameId+'turn', function(err, turn){
+    callback(parseInt(turn));
+    return;
+  });
+}
+
+
+function addToTable(gameId, card, callback){
+  client.lpush('g'+gameId+'table', JSON.stringify(card), function(){
+    callback(card);
+    return;
+  });
+}
+
+
+function getTable(gameId, callback){
+  client.lrange('g'+gameId+'table', 0, -1, function(err, t){
+    var table = []
+  
+    t.forEach(function(c, i){
+      table.push(JSON.parse(c))
+    });
+  
+    callback(table);
+    return;
+  });
+}
+
+function resetTable(gameId, winner, callback){
+  client.del('g'+gameId+'table', function(err, t){
+    callback(t);
+  });
+}
+
+
 function Game(id, deck, table, players){
   this.id = id;
   this.deck = deck;
@@ -287,3 +333,8 @@ exports.setHand = setHand;
 exports.getHand = getHand;
 exports.setHandKind = setHandKind;
 exports.getHandKind = getHandKind;
+exports.setTurn = setTurn;
+exports.getTurn = getTurn;
+exports.addToTable = addToTable;
+exports.getTable = getTable;
+exports.resetTable = resetTable

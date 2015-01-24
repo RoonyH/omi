@@ -14,7 +14,11 @@ define(["backbone", "collections/cards"],
       this.get('cards').add(card);
       console.log('card: ' + card.get('kind') + card.get('value') +
                   ' placed on the table: ' + this.get('id'));
-    },  
+    },
+    
+    clear: function(){
+      this.get('cards').reset();
+    }
   });
 
   return {

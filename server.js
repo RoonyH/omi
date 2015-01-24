@@ -76,17 +76,22 @@ io.on('connection', function (socket) {
     console.log('card-played')
     console.log(data);
 
-    routes.cardPlayed(data, function(err, game){
+    routes.cardPlayed(data, function(err, game, winner){
       if(err){
         socket.emit("cant-play-card", {msg: err, card: data.card});
         return;
       }
+     
       
       game.players.forEach(function(player){
         details = {
           player: data.playerId,
           card: data.card
         };
+
+        if(winner){
+          details.winner = winner
+        }
 
         io.to(player.connectionId).emit('played-card', details);
       });

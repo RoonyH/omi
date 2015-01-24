@@ -1,33 +1,44 @@
 body {
-  padding: 3%;
+  padding: 2%;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 .img-card {
-  height: 110;
-  width: 70;
+  height: 100%;
+  width: 100%;
 }
 
 .card{
-  float:left
+  display: inline-block;
+  height: 70%;
+  width: 12.5%;
+}
+
+.player-holder{
+  background: antiquewhite;
+  height: 20%;
+}
+
+.local-player-holder{
+  background: antiquewhite;
+  height: 40%;
 }
 
 .player{
   background: antiquewhite;
-  padding: 15px;
 }
 
 .game-table{
   background: gray;
-  padding: 15px;
+  height: 40%;
 }
 
-#trumphs-pick {
+.message-user{
   width: 40%;
   height: 20%;
   visibility: hidden;
   position: absolute;
   left: 30%;
-  top: 20%;
+  top: 40%;
   background-color: aquamarine;
 }
