@@ -254,8 +254,23 @@ function getTable(gameId, callback){
 }
 
 function resetTable(gameId, winner, callback){
-  client.del('g'+gameId+'table', function(err, t){
-    callback(t);
+  client.del('g'+gameId+'table')
+  setTurn(gameId, winner, function(){
+    setHandKind(gameId, 'n', function(){
+      callback();
+    });  
+  })
+
+}
+
+
+function gameBegined(gameId, callback){
+  getTrumps(gameId, function(trumphs){
+    if(trumphs.kind!='u'){
+      callback(true)
+    } else {
+      callback(false)
+    }
   });
 }
 
@@ -341,4 +356,5 @@ exports.setTurn = setTurn;
 exports.getTurn = getTurn;
 exports.addToTable = addToTable;
 exports.getTable = getTable;
-exports.resetTable = resetTable
+exports.resetTable = resetTable;
+exports.gameBegined = gameBegined;

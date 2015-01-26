@@ -48,11 +48,11 @@ require(['jquery', 'models/game'], function($, game){
         t.placeCard(g.createCard(data.card))
         if(data.winner){
           setTimeout(function(){
-            $('#message').html('p 1 dinuwa yako!');
+            $('#message').html('p' + data.winner + 'Won that hand!');
             $('#message').css('visibility', 'visible');
             setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
             t.clear();
-          })
+          },2000)
         }
       });
 
