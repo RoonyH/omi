@@ -2,7 +2,6 @@ var url = require('url');
 
 var gameModule = require('./game');
 
-
 exports.index = function(req, res){
   var url_parts = url.parse(req.url, true);
   var query = url_parts.query;
@@ -19,13 +18,13 @@ exports.index = function(req, res){
   
     gameModule.registerPlayer(gameId, function(playerId, sec){
       res.cookie('sec', sec)
-      res.render('game', {gameId: parseInt(query.gameId), playerId: playerId});
+      res.render('game', {gameId: gameId, playerId: playerId});
     });
   } else {
     gameModule.registerGame(function(gameId){
       gameModule.registerPlayer(gameId, function(playerId, sec){
         res.cookie('sec', sec)
-        res.render('game', {gameId: gameId, playerId: playerId})
+        res.render('game', {gameId: gameId, playerId: playerId});
       });
     });
   }

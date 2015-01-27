@@ -2,10 +2,15 @@ var redis = require('redis');
 var crypto = require('crypto');
 var underscore = require('underscore');
 
-var client = redis.createClient('redis-port', 'redis-host');
+var redisPort = process.env.REDIS_PORT;
+var redisHost = process.env.REDIS_HOST;
+var redisPass = process.env.REDIS_PASS;
 
-client.auth("redis-pass", function(){
-  console.log("authenticated!")
+var client = redis.createClient(redisPort, redisHost);
+
+client.auth(redisPass, function(){
+  console.log("Connected to "+redisHost+":"+redisPort);
+  console.log("authenticated!");
 })
 
 
@@ -127,7 +132,9 @@ function createDeck(id, callback){
         });
       });
 
-      client.set('deck-'+id, JSON.stringify(underscore.shuffle(deck)), function(){
+      deck = underscore.shuffle(deck)
+
+      client.set('deck-'+id, JSON.stringify(deck), function(){
         callback(deck);
         return;
       });

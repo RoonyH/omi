@@ -8,8 +8,9 @@ requirejs.config({
 
 require(['jquery', 'models/game'], function($, game){
   $(function(){
-    var host = window.location.hostname; 
-    var socket = io.connect('https://' + host);
+    var host = window.location.hostname;
+    var protocol = window.location.protocol;
+    var socket = io.connect(protocol + '//' + host);
 
     socket.on('game', function (data) {
       g = new game.Game();
