@@ -1,5 +1,6 @@
-var redis = require('redis')
+var redis = require('redis');
 var crypto = require('crypto');
+var underscore = require('underscore');
 
 var client = redis.createClient('redis-port', 'redis-host');
 
@@ -126,7 +127,7 @@ function createDeck(id, callback){
         });
       });
 
-      client.set('deck-'+id, JSON.stringify(deck), function(){
+      client.set('deck-'+id, JSON.stringify(underscore.shuffle(deck)), function(){
         callback(deck);
         return;
       });
