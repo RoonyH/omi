@@ -103,7 +103,7 @@ exports.cardPlayed = function(data, callback){
 
   gameModule.gameBegined(gameId, function(begined){
 
-    if(begined){
+    if(!begined){
       callback("Not started yet");
       return;
     }
@@ -228,11 +228,11 @@ exports.cardPlayed = function(data, callback){
           }
 
           if(card.kind===trumps.kind){
-            cardvalue+=20;
+            cardvalue+=40;
           }
 
           if(card.kind!=handkind){
-            cardvalue=0;
+            cardvalue-=20;
           }
 
           console.log(val+": "+cardvalue);

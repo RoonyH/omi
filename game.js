@@ -266,7 +266,9 @@ function resetTable(gameId, winner, callback){
 
 function gameBegined(gameId, callback){
   getTrumps(gameId, function(trumphs){
-    if(trumphs.kind!='u'){
+    console.log(JSON.stringify(trumphs))
+
+    if(trumphs.kind){
       callback(true)
     } else {
       callback(false)

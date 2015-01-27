@@ -96,7 +96,7 @@ require(['jquery', 'models/game'], function($, game){
       
       socket.emit('trumphs-picked', data = {
         gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
-        trumphs: $(this).html()
+        trumphs: $($(this).children()[0]).html()
       })
       
       $('#trumphs-pick').css('visibility', 'hidden')

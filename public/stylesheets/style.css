@@ -35,10 +35,9 @@ body {
 
 .message-user{
   width: 40%;
-  height: 20%;
   visibility: hidden;
   position: absolute;
   left: 30%;
-  top: 40%;
+  top: 10%;
   background-color: aquamarine;
 }

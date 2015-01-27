@@ -1,11 +1,112 @@
 
 
     <div id="trumphs-pick" class="message-user">
-      <p>Pick Trumphs</p>
-      <button class="trumph-button">Clubs</button>
-      <button class="trumph-button">Hearts</button>
-      <button class="trumph-button">Spades</button>
-      <button class="trumph-button">Diamonds</button>
+<link href='http://fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css'>
+
+<style>
+
+  .trump-pick-invite{
+    padding: 10px;
+    text-align: center;
+    margin: 0 auto; 
+    font: bold 30px/40px Courgette, cursive, sans-serif;
+  }
+
+  .kind-container{
+    margin: 0 auto;
+    width: 200px;
+  }
+
+  .trumps-pick {
+    margin: 5px;
+    width: 190px;
+    background-color: white;
+    border-color: black;
+    border-width: 2px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font: bold 20px/40px Courgette, cursive, sans-serif
+  }
+
+  .trumps-pick #kind {
+    display: none;
+  }
+
+  .trumps-pick:before {
+    margin-right: 5px;
+    float: left;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 80px 80px;
+    width: 40px;
+    height: 40px;
+    background-image: url(/images/kinds.png);
+  }
+
+  .trumps-pick-diamonds:before {
+    background-position: 0 -40px;
+  }
+
+  .trumps-pick-spades:before {
+    background-position: 0 0px;
+  }
+
+  .trumps-pick-clubs:before {
+    background-position: -40px -40px ;
+  }
+
+  .trumps-pick-hearts:before {
+    background-position: -40px 0;
+  }
+
+  .trumps-pick-diamonds:hover{
+    background-color: black;
+    color: white;
+  }
+
+  .trumps-pick-spades:hover{
+    background-color: red;
+    color: white;
+  }
+
+  .trumps-pick-clubs:hover{
+    background-color: red;
+    color: white;
+  }
+
+  .trumps-pick-hearts:hover{
+    background-color: black;
+    color: white;
+  }
+</style>
+<div>
+<div class="trump-pick-invite">
+Please pick trumps
+</div>
+
+<div class="kind-container">
+
+<button class="trumph-button trumps-pick trumps-pick-spades">
+  <div id="kind">Spades</div>
+  Spades
+</button>
+
+<button class="trumph-button trumps-pick trumps-pick-hearts">
+  <div id="kind">Hearts</div>
+  Hearts
+</button>
+
+<button class="trumph-button trumps-pick trumps-pick-clubs">
+  <div id="kind">Clubs</div>
+  Clubs
+</button>
+
+<button class="trumph-button trumps-pick trumps-pick-diamonds">
+  <div id="kind">Diamonds</div>
+  Diamonds
+</button>
+</div>
+</div>
     </div>
 
     <divd id="message" class="message-user">
