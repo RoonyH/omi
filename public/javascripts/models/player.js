@@ -22,6 +22,10 @@ define(["backbone", "views/player", "collections/cards"],
 
     playCard: function(card, table){
       table.placeCard(this.takeCard(card));
+    },
+
+    sortCards: function(){
+      this.trigger('sort')
     }
   });
 

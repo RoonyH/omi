@@ -4,6 +4,7 @@ define(['jquery', 'backbone'], function($, Backbone){
 
     initialize: function(){
       this.listenTo(this.model, 'removed', this.removedCard);
+      this.listenTo(this.model, 'moved', this.movedCard);
     },
 
     render: function(){
@@ -32,8 +33,17 @@ define(['jquery', 'backbone'], function($, Backbone){
     },
 
     removedCard: function(){
+      console.log(this.cid)
       this.remove();
       console.log('removed view');
+    },
+
+    movedCard: function(){
+      console.log('moved view');
+      console.log(this.$el.html());
+      this.$el.slideToggle();
+      $($("#player-" + omiGameConf.playerId + " #cards")).prepend(this.$el);
+      this.$el.slideToggle();
     },
     
     clicked: function(){

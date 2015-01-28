@@ -14,7 +14,6 @@ define(["jquery", "backbone", "models/card", "models/player", "models/table", "c
 
     createCard: function(card){
       var card = new cardModel.Card(card);
-      var cv = new cardView.CardView({model: card});
       return card;
     },
 

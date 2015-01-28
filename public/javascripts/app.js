@@ -70,6 +70,7 @@ require(['jquery', 'models/game'], function($, game){
           })
           p.giveCard(c);
         });
+        setTimeout(function(){p.sortCards()}, 2000)
       });
 
       socket.on('cant-play-card', function(data){
