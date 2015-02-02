@@ -10,15 +10,17 @@ require(['jquery', 'models/game'], function($, game){
   $(function(){
     var host = window.location.hostname;
     var protocol = window.location.protocol;
-    var socket = io.connect(protocol + '//' + host);
+    socket = io.connect(protocol + '//' + host);
 
     socket.on('game', function (data) {
+      console.log(data)
       g = new game.Game();
       p = g.createPlayer({
-        id: omiGameConf.playerId, name:'Alex', trumpher: data.trumpher
+        id: omiGameConf.playerId,
+        name:'Alex',
+        trumpher: (data.trumphs.playerId == omiGameConf.playerId) && (data.status == 2)
       });
       t = g.createTable({id: 1});
-
       data.hand.forEach(function(card){
         var c = g.createCard(card);
         c.set('clickHandler', function(){
@@ -31,8 +33,16 @@ require(['jquery', 'models/game'], function($, game){
         p.giveCard(c);
       });
 
+      if(data.table){
+        data.table.forEach(function(card){
+          t.placeCard(g.createCard(card), card.pid)
+        })
+      }
+
       data.players.forEach(function(player){
-        var p = g.createPlayer(player);
+        console.log(player)
+        if(player.id != omiGameConf.playerId)
+          var p = g.createPlayer(player);
       });
 
       socket.on('other-player-got-first-hand', function(data){
@@ -46,7 +56,7 @@ require(['jquery', 'models/game'], function($, game){
 
       socket.on('played-card', function(data){
         console.log(data);
-        t.placeCard(g.createCard(data.card))
+        t.placeCard(g.createCard(data.card), data.player)
         if(data.winner){
           setTimeout(function(){
             $('#message').html('p' + data.winner + 'Won that hand!');
@@ -94,8 +104,8 @@ require(['jquery', 'models/game'], function($, game){
     });
 
     $('.trumph-button').click(function(){
-      console.log($(this).html())
-      
+      omiGameConf.status = 3;
+
       socket.emit('trumphs-picked', data = {
         gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
         trumphs: $($(this).children()[0]).html()
@@ -107,3 +117,8 @@ require(['jquery', 'models/game'], function($, game){
     socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
   });
 });
+
+function getCookieValue(a, b) {
+    b = document.cookie.match('(^|;)\\s*' + a + '\\s*=\\s*([^;]+)');
+    return b ? b.pop() : '';
+}

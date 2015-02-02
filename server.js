@@ -21,30 +21,30 @@ var server = http.createServer(app);
 var io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
-  console.log('connected!');
+  console.log('------------------>  connected!  <---------------------');
 
   socket.on('start', function (data) {
-    routes.game({gameId: data.gameId}, function(game){
+
+    var opt = {
+      gameId: data.gameId,
+      playerId: data.playerId,
+      name: data.name,
+      socketId: socket.id
+    }
+
+    routes.game(opt, function(game){
       console.log(JSON.stringify(game));
-      var players = [];
 
-      game.players.forEach(function(p){
-        players.push(p);
+      game.players.forEach(function(player){
+        io.to(player.socketId).emit('other-player-got-first-hand', {id: data.playerId});
       });
-
-      game.addPlayer(data.playerId, socket.id, data.name);
-      game.connectOtherPlayers(data.playerId, function(playerConArr){
-        playerConArr.forEach(function(con){
-          io.to(con).emit('other-player-got-first-hand', {id: data.playerId});
-        });
-      });
-
-      var firstHand = game.getPlayerFirstHand(data.playerId);
 
       gameDetails = {
-        hand: firstHand,
-        players: players,
-        trumpher: data.playerId == 1
+        hand: game.hand,
+        players: game.players,
+        trumphs: game.trumphs,
+        table: game.table,
+        status: game.status
       }
 
       socket.emit('game', gameDetails);
@@ -52,26 +52,26 @@ io.on('connection', function (socket) {
   });
 
   socket.on('trumphs-picked', function(data){
-    console.log('trumps')
-    console.log(data);
 
     routes.trumpsPicked(data, function(err, game){
+      console.log(game)
+
       if(err){
         socket.emit("error", {msg: err});
         return;
       }
-      
+
       game.players.forEach(function(player){
         details = {
           trumphs: data.trumphs,
           hand: game.getPlayerSecondHand(player.id)
         };
 
-        io.to(player.connectionId).emit('trumps-and-next-hand', details);
+        io.to(player.socketId).emit('trumps-and-next-hand', details);
       });
     })
   });
-  
+
 
   socket.on('card-played', function(data){
     console.log('card-played')
@@ -94,7 +94,7 @@ io.on('connection', function (socket) {
           details.winner = winner
         }
 
-        io.to(player.connectionId).emit('played-card', details);
+        io.to(player.socketId).emit('played-card', details);
       });
     })
 

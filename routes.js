@@ -6,27 +6,43 @@ exports.index = function(req, res){
   var url_parts = url.parse(req.url, true);
   var query = url_parts.query;
 
-  res.cookie('test', 'value')
-
-  if(!query.gameId){
-    res.render('index')
-    return
+  if(req.cookies.sec){
+    console.log("---------> " + req.cookies.sec + "<--------")
+    gameModule.getGameBySec(req.cookies.sec, function(err, game){
+      console.log(game)
+      if(err){
+        res.clearCookie('sec')
+        handleQuery();
+      } else {
+        //if there is unfinished game neglect query and load it.
+        res.render('game', {gameId: game.gameId, playerId: game.playerId});
+      }
+    })
+  } else {
+    handleQuery();
   }
 
-  if(query.gameId!='new'){
-    var gameId = parseInt(query.gameId);
-  
-    gameModule.registerPlayer(gameId, function(playerId, sec){
-      res.cookie('sec', sec)
-      res.render('game', {gameId: gameId, playerId: playerId});
-    });
-  } else {
-    gameModule.registerGame(function(gameId){
-      gameModule.registerPlayer(gameId, function(playerId, sec){
+  function handleQuery(){
+    if(!query.gameId){
+      res.render('index')
+      return
+    }
+
+    if(query.gameId!='new'){
+      var gameId = parseInt(query.gameId);
+    
+      gameModule.registerPlayer(gameId, function(err, playerId, sec){
         res.cookie('sec', sec)
         res.render('game', {gameId: gameId, playerId: playerId});
       });
-    });
+    } else {
+      gameModule.registerGame(function(gameId){
+        gameModule.registerPlayer(gameId, function(err, playerId, sec){
+          res.cookie('sec', sec)
+          res.render('game', {gameId: gameId, playerId: playerId});
+        });
+      });
+    }
   }
 };
 
@@ -35,38 +51,70 @@ exports.game = function(opt, callback){
   console.log('finding game' + JSON.stringify(opt))
 
   var gameId = opt.gameId;
+  var playerId = opt.playerId;
 
-  gameModule.getGame(gameId, function(game){
-    callback(game);
+  var player = {
+    playerId: opt.playerId,
+    socketId: opt.socketId,
+    name: opt.name
+  }
+
+  gameModule.getStatus(gameId, function(status){
+    gameModule.getHand(gameId, playerId, function(hand){
+
+      if(status!=gameModule.gameStatus.WAITING_CARD_PLAY)
+        hand = hand.slice(0, 4);
+
+      gameModule.getTable(gameId, function(table){
+        gameModule.getPlayers(gameId, function(err, players){
+          gameModule.getTurn(gameId, function(turn){
+            gameModule.getTrumps(gameId, function(trumphs){
+              gameModule.addPlayer(gameId, playerId, player, function(){
+                callback({
+                  hand: hand,
+                  table: table,
+                  players: players,
+                  trumphs: trumphs,
+                  status: status,
+                  turn: turn
+                });
+              });
+            });
+          });
+        });
+      });
+    });
   });
 }
 
 
 exports.trumpsPicked = function(data, callback){
-  gameModule.getTrumps(data.gameId, function(t){
-    if(t.playerId == data.playerId){
+  gameModule.setStatus(data.gameId, gameModule.gameStatus.WAITING_CARD_PLAY, function(){
+    gameModule.getTrumps(data.gameId, function(t){
+      if(t.playerId == data.playerId){
 
-      trumphKind = {
-        Clubs: "c",
-        Hearts: "h",
-        Spades: "s",
-        Diamonds: "d"
-      }
+        trumphKind = {
+          Clubs: "c",
+          Hearts: "h",
+          Spades: "s",
+          Diamonds: "d"
+        }
 
-      opt = {
-        gameId: data.gameId,
-        playerId: data.playerId,
-        kind: trumphKind[data.trumphs]
-      }
-    
-      gameModule.setTrumps(data.gameId, opt, function(){
-        gameModule.getGame(data.gameId, function(game){
-          callback(null, game);
+        opt = {
+          gameId: data.gameId,
+          playerId: data.playerId,
+          kind: trumphKind[data.trumphs]
+        }
+
+        gameModule.setTrumps(data.gameId, opt, function(){
+          gameModule.getGame(data.gameId, function(game){
+            callback(null, game);
+          });
         });
-      });
-    } else {
-      callback("You are not the player to pick trumps", null);
-    }
+      } else {
+        callback("You are not the player to pick trumps", null);
+      }
+    });
   });
 }
 

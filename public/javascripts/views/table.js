@@ -8,8 +8,8 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
     template: $('#template-table').html(),
 
     initialize: function() {
-      this.listenTo(this.model.get('cards'), 'add', this.placedCard);
-      this.listenTo(this.model.get('cards'), 'reset', this.clear);
+      this.listenTo(this.model, 'card-placed', this.placedCard);
+      this.listenTo(this.model.get('cards'), 'reset', this.render);
     },
 
     render: function(){
@@ -21,13 +21,14 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
       return this.$el;
     },
 
-    placedCard: function(card){
-      var cv = new cardView.CardView({model: card});
-      this.$el.append(cv.render());
+    placedCard: function(data){
+      console.log(data.pid)
+      var cv = new cardView.CardView({model: data.card, el: '#t-card-'+data.pid});
+      this.$('#cards').append(cv.render());
     },
     
     clear: function(){  
-      this.$el.html('');
+      this.$('#cards').html('');
     }
   });
 

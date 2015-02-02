@@ -13,15 +13,22 @@ client.auth(redisPass, function(){
   console.log("authenticated!");
 })
 
+var gameStatus = {
+  WAITING_PLAYER_JOIN: 1,
+  WAITING_TRUMPS_PICK: 2,
+  WAITING_CARD_PLAY: 3
+}
+
 
 function registerGame(callback){
-  client.incr('omi-games', function(err, id){
-    createDeck(id, function(deck){
-      addInitialHands(id, deck);
-      setTurn(id, 1, function(){;
-        createPlayers(id, function(){
-          setTrumps(id, {playerId: 1}, function(){
-            callback(id);
+  client.incr('omi-games', function(err, gameId){
+    createDeck(gameId, 1, function(deck){
+      addInitialHands(gameId, deck, function(){
+        setTurn(gameId, 1, function(){;
+          createPlayers(gameId, function(){
+            setTrumps(gameId, {playerId: 1}, function(){
+              callback(gameId);
+            });
           });
         });
       });
@@ -31,10 +38,19 @@ function registerGame(callback){
 
 
 function registerPlayer(gameId, callback){
-  client.incr('g'+gameId+'pc' + gameId, function(err, id){
+  client.incr('g'+gameId+'pc', function(err, id){
+
+    if(id>4){
+      //Game is full
+      callback('Game is full', null, null)
+      return;
+    }
+
     sec = random();
     client.set('g'+gameId+'p'+id+'sec', sec, function(err){
-      callback(id, sec);
+      client.set(sec, JSON.stringify({gameId: gameId, playerId:id}), function(err){
+        callback(null, id, sec);
+      })
     })
   });
 }
@@ -42,6 +58,23 @@ function registerPlayer(gameId, callback){
 
 function random(){
   return crypto.randomBytes(8).toString('hex')
+}
+
+
+function setStatus(gameId, status, callback){
+  console.log(">>>>>>>LLLLLL----" + status)
+  client.set('g' + gameId + 'status', status, function(){
+    callback(status);
+  });
+}
+
+
+function getStatus(gameId, callback){
+  client.get('g' + gameId + 'status', function(err, status){
+    if(!status)
+      status="2"
+    callback(parseInt(status));
+  });
 }
 
 
@@ -73,16 +106,20 @@ function getGame(id, callback){
 }
 
 
-function getDeck(id, callback){
+function getDeck(gameId, callback){
   console.log('getting deck');
 
-  client.get('deck-'+id, function(err, deck){
+  var roundId = 1;
+
+  var deckId = 'g' + gameId + 'r' + roundId + 'deck';
+
+  client.get(deckId, function(err, deck){
     if(deck){
       var deck = JSON.parse(deck);
       callback(err, deck);
       return;
     } else {
-      callback("No deck for id: " + id);
+      callback("No deck for id: " + gameId);
     }
   });
 }
@@ -97,8 +134,8 @@ function getPlayers(id, callback){
         var player = JSON.parse(player);
         if(player){
           ps.push({
-            connectionId: player.connectionId,
-            id: player.id,
+            socketId: player.socketId,
+            id: player.playerId,
             name: player.name
           });
         }
@@ -111,10 +148,21 @@ function getPlayers(id, callback){
 }
 
 
-function createDeck(id, callback){
-  console.log('creating deck');
+function addPlayer(gameId, playerId, player, callback){
+  client.lset('players-'+gameId, (playerId-1), JSON.stringify(player), function(err, players){
+    if(err)
+      throw err;
+    callback(player)
+  });
+}
 
-  client.get('deck-'+id, function(err, deck){
+
+function createDeck(gameId, roundId, callback){
+  console.log('Game: ' + gameId + ' Round: ' + roundId + ' Creating deck');
+
+  var deckId = 'g' + gameId + 'r' + roundId + 'deck';
+
+  client.get(deckId, function(err, deck){
     if(deck){
       var deck = JSON.parse(deck);
       callback(deck);
@@ -134,7 +182,7 @@ function createDeck(id, callback){
 
       deck = underscore.shuffle(deck)
 
-      client.set('deck-'+id, JSON.stringify(deck), function(){
+      client.set(deckId, JSON.stringify(deck), function(){
         callback(deck);
         return;
       });
@@ -143,16 +191,16 @@ function createDeck(id, callback){
 }
 
 
-function createPlayers(id, callback){
-  console.log('creating empty players');
-  
-  client.lpush('players-'+id, null, null, null, null, function(err, num){
+function createPlayers(gameId, callback){
+  console.log('Game: ' + gameId + ' Creating empty players');
+
+  client.lpush('players-'+gameId, null, null, null, null, function(err, num){
     callback(err, []);
   });
 }
 
 
-function addInitialHands(gameId, deck){
+function addInitialHands(gameId, deck, callback){
   var addHand = function(playerId){
     var first = deck.slice((playerId-1)*4, (playerId-1)*4+4);
     var second = deck.slice(16 + (playerId-1)*4, 16 + (playerId-1)*4+4);
@@ -160,6 +208,8 @@ function addInitialHands(gameId, deck){
       playerId = playerId+1;
       if(playerId<=4)
         addHand(playerId++);
+      else
+        callback(deck);
     });
   };
 
@@ -168,7 +218,9 @@ function addInitialHands(gameId, deck){
 
 
 function setHand(gameId, playerId, hand, callback){
-  client.set('hand-'+gameId+playerId, JSON.stringify(hand), function(){
+  var handId = 'g' + gameId + 'p' + playerId + 'hand';
+
+  client.set(handId, JSON.stringify(hand), function(){
     callback(hand);
     return;
   });
@@ -176,7 +228,9 @@ function setHand(gameId, playerId, hand, callback){
 
 
 function getHand(gameId, playerId, callback){
-  client.get('hand-'+gameId+playerId, function(err, hand){
+  var handId = 'g' + gameId + 'p' + playerId + 'hand';
+
+  client.get(handId, function(err, hand){
     callback(JSON.parse(hand));
     return;
   });
@@ -285,6 +339,17 @@ function gameBegined(gameId, callback){
 }
 
 
+function getGameBySec(sec, callback){
+  client.get(sec, function(err, game){
+    if(err)
+      throw err;
+    if(game)
+      callback(null, JSON.parse(game));
+    else
+      callback("No such game", null);
+  });
+}
+
 function Game(id, deck, table, players){
   this.id = id;
   this.deck = deck;
@@ -368,3 +433,9 @@ exports.addToTable = addToTable;
 exports.getTable = getTable;
 exports.resetTable = resetTable;
 exports.gameBegined = gameBegined;
+exports.getGameBySec = getGameBySec;
+exports.gameStatus = gameStatus;
+exports.setStatus = setStatus;
+exports.getStatus = getStatus;
+exports.getPlayers = getPlayers;
+exports.addPlayer = addPlayer;

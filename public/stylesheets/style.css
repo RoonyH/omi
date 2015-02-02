@@ -10,7 +10,7 @@ body {
 
 .card{
   display: inline-block;
-  height: 70%;
+  height: 50%;
   width: 12.5%;
 }
 
@@ -40,4 +40,28 @@ body {
   left: 30%;
   top: 10%;
   background-color: aquamarine;
+}
+
+.table-card-1{
+  position: absolute;
+  top: 30%;
+  left: 34.375%;
+}
+
+.table-card-2{
+  position: absolute;
+  top: 0%;
+  left: 41.625%;
+}
+
+.table-card-3{
+  position: absolute;
+  top: 50%;
+  left: 46.875%;
+}
+
+.table-card-4{
+  position: absolute;
+  top: 20%;
+  left: 50%;
 }

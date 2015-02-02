@@ -13,7 +13,6 @@ html
            player 2 goes here
 
          div#table-1.col-md-8.text-center
-           player 1 goes here
 
          div(id='player-'+((playerId)%4+1) class="col-md-2 player-holder text-center")
            player 4 goes here
@@ -23,6 +22,14 @@ html
            player 3 goes here
 
     include game.html
+
+    script(id="template-table" type="x-tmpl-mustache")
+      |<lable>{{name}}</lable>
+      #cards
+        div(id='t-card-'+((playerId+2)%4+1) class="card table-card-1")
+        div(id='t-card-'+((playerId+1)%4+1) class="card table-card-2")
+        div(id='t-card-'+playerId class="card table-card-3")
+        div(id='t-card-'+((playerId)%4+1) class="card table-card-4")
 
     script.
       var omiGameConf = !{JSON.stringify({gameId: gameId, playerId: playerId})}

@@ -23,7 +23,7 @@ define(['jquery', 'backbone', 'views/card', 'underscore'], function($, Backbone,
       this.$el.html(Mustache.render(this.template, player));
 
       this.cardsSection = this.$('#cards')
-
+      console.log(this.$el)
       return this.$el;
     },
 
@@ -40,7 +40,7 @@ define(['jquery', 'backbone', 'views/card', 'underscore'], function($, Backbone,
 
       obj.view = cv;
       this.cards.push(obj);
-      console.log(this.cardsSection)
+      console.log(cv.render())
       this.cardsSection.append(cv.render());
     },
 
