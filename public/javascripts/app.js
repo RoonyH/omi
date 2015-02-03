@@ -32,6 +32,8 @@ require(['jquery', 'models/game'], function($, game){
         });
         p.giveCard(c);
       });
+      
+      setTimeout(function(){p.sortCards()}, 1000)
 
       if(data.table){
         data.table.forEach(function(card){
@@ -99,12 +101,13 @@ require(['jquery', 'models/game'], function($, game){
         });
 
         p.giveCard(c);
+        p.sortCards();
 
       });
     });
 
     $('.trumph-button').click(function(){
-      omiGameConf.status = 3;
+      p.set('trumpher', false)
 
       socket.emit('trumphs-picked', data = {
         gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
@@ -114,7 +117,9 @@ require(['jquery', 'models/game'], function($, game){
       $('#trumphs-pick').css('visibility', 'hidden')
     })
 
-    socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
+    socket.on('connect', function(){
+      socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
+    });
   });
 });
 

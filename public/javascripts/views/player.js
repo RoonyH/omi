@@ -46,6 +46,22 @@ define(['jquery', 'backbone', 'views/card', 'underscore'], function($, Backbone,
 
     takenCard: function(card){
       card.remove();
+      var value = card.get('value');
+      if(value == 1){
+        value = 14
+      }
+      var sortIndex = card.get('kind')+(value+10);
+
+      var index = -1;
+      for(i=0; i<this.cards.length; i++){
+        if(this.cards[i].sortIndex===sortIndex){
+          index = i
+          break;
+        }
+      }
+
+      this.cards.splice(index, 1)
+
     },
 
     sortCards: function(){
