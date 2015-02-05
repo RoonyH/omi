@@ -29,7 +29,7 @@ define(['jquery', 'backbone'], function($, Backbone){
       if(value < 10){
         value = '0' + value;
       }
-      return "images/classic/" + this.model.get('kind') + value + '.png';
+      return "images/medquality/" + this.model.get('kind') + value + '.png';
     },
 
     removedCard: function(){
