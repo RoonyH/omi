@@ -36,7 +36,13 @@ io.on('connection', function (socket) {
       console.log(JSON.stringify(game));
 
       game.players.forEach(function(player){
-        io.to(player.socketId).emit('other-player-got-first-hand', {id: data.playerId});
+        var details = {
+          id: data.playerId,
+          name: data.name,
+          status: game.status
+        }
+
+        io.to(player.socketId).emit('other-player-got-first-hand', details);
       });
 
       gameDetails = {
@@ -91,7 +97,7 @@ io.on('connection', function (socket) {
         };
 
         if(winner){
-          details.winner = winner
+          details.winner = winner.name
         }
 
         io.to(player.socketId).emit('played-card', details);
@@ -99,6 +105,26 @@ io.on('connection', function (socket) {
     })
 
   });
+
+  socket.on('round', function(data){
+
+    var opt = {
+      gameId: data.gameId,
+      playerId: data.playerId
+    }
+
+    routes.round(opt, function(err, game){
+      gameDetails = {
+        hand: game.getPlayerFirstHand(data.playerId),
+        trumphs: game.trumphs,
+        players: [],
+        table: [],
+        status: 2 // WAITING_TRUMPHS_PICK
+      }
+
+      socket.emit('new-round', gameDetails);
+    })
+  })
 });
 
 server.listen(app.get('port'), function(){

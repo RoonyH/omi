@@ -60,6 +60,10 @@ exports.game = function(opt, callback){
   }
 
   gameModule.getStatus(gameId, function(status){
+
+    if(!status)
+      return;
+
     gameModule.getHand(gameId, playerId, function(hand){
 
       if(status!=gameModule.gameStatus.WAITING_CARD_PLAY)
@@ -70,20 +74,53 @@ exports.game = function(opt, callback){
           gameModule.getTurn(gameId, function(turn){
             gameModule.getTrumps(gameId, function(trumphs){
               gameModule.addPlayer(gameId, playerId, player, function(){
-                callback({
+                var details = {
                   hand: hand,
                   table: table,
                   players: players,
                   trumphs: trumphs,
                   status: status,
                   turn: turn
-                });
+                }
+
+                if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
+                  console.log('pppppppppppppppppppppppppppppppppppppppppp'+players.length)
+                  gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
+                    details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
+
+                    callback(details)
+                  })
+                } else {
+                  callback(details)
+                }
               });
             });
           });
         });
       });
     });
+  });
+}
+
+
+exports.round = function(opt, callback){
+  var gameId = opt.gameId;
+  var playerId = opt.playerId;
+  gameModule.getStatus(gameId, function(status){
+    if(status!=gameModule.gameStatus.WAITING_TRUMPS_PICK){
+      console.log("Previous round still on")
+      callback("Previous round still on");
+      return;
+    } else {
+      gameModule.registerRound(gameId, 1, function(){
+        gameModule.getTrumps(gameId, function(trumphs){
+          gameModule.getGame(gameId, function(game){
+            game.trumphs = trumphs;
+            callback(null, game);
+          });
+        });
+      })
+    }
   });
 }
 
@@ -124,7 +161,7 @@ exports.cardPlayed = function(data, callback){
   var playerId = data.playerId;
   var card = data.card;
 
-  console.log("gameId: "+gameId+"playerId: "+playerId+"card: "+JSON.stringify(card));
+  console.log("gameId: "+gameId+" playerId: "+playerId+" card: "+JSON.stringify(card));
 
   function findCard(card, hand){
     var index = -1;
@@ -186,8 +223,14 @@ exports.cardPlayed = function(data, callback){
                 gameModule.getGame(data.gameId, function(game){
                   checkWinner(data.gameId, function(winner){
                     if(winner){
-                      gameModule.resetTable(data.gameId, winner, function(){
-                        callback(null, game, winner);
+                      gameModule.resetTable(data.gameId, winner.playerId, function(){
+                        if(!hand.length){
+                          gameModule.resetRound(data.gameId, function(){
+                            callback(null, game, winner);
+                          })
+                        } else {
+                          callback(null, game, winner);
+                        }
                       })
                       return;
                     }
@@ -210,8 +253,14 @@ exports.cardPlayed = function(data, callback){
                 gameModule.getGame(data.gameId, function(game){
                   checkWinner(data.gameId, function(winner){
                     if(winner){
-                      gameModule.resetTable(data.gameId, winner, function(){
-                        callback(null, game, winner);
+                      gameModule.resetTable(data.gameId, winner.playerId, function(){
+                        if(!hand.length){
+                          gameModule.resetRound(data.gameId, function(){
+                            callback(null, game, winner);
+                          })
+                        } else {
+                          callback(null, game, winner);
+                        }
                       })
                       return;
                     }
@@ -242,8 +291,14 @@ exports.cardPlayed = function(data, callback){
                 gameModule.getGame(data.gameId, function(game){
                   checkWinner(data.gameId, function(winner){
                     if(winner){
-                      gameModule.resetTable(data.gameId, winner, function(){
-                        callback(null, game, winner);
+                      gameModule.resetTable(data.gameId, winner.playerId, function(){
+                        if(!hand.length){
+                          gameModule.resetRound(data.gameId, function(){
+                            callback(null, game, winner);
+                          })
+                        } else {
+                          callback(null, game, winner);
+                        }
                       })
                       return;
                     }
@@ -291,7 +346,9 @@ exports.cardPlayed = function(data, callback){
         });
         if(table.length==4){
           console.log('winner is: ' + winner);
-          callback(winner);
+          gameModule.getPlayer(gameId, winner, function(p){
+            callback(p);
+          });
         } else {
           callback(null);
         }

@@ -17,8 +17,8 @@ require(['jquery', 'models/game'], function($, game){
       g = new game.Game();
       p = g.createPlayer({
         id: omiGameConf.playerId,
-        name:'Alex',
-        trumpher: (data.trumphs.playerId == omiGameConf.playerId) && (data.status == 2)
+        name:'Player ' + omiGameConf.playerId,
+        trumpher: (data.trumphs.playerId == omiGameConf.playerId)
       });
       t = g.createTable({id: 1});
       data.hand.forEach(function(card){
@@ -47,11 +47,36 @@ require(['jquery', 'models/game'], function($, game){
           var p = g.createPlayer(player);
       });
 
+      if(p.get('trumpher') && (g.get('players').length==4) && data.status==2){
+        $('#trumphs-pick').css('visibility', 'visible')
+      }
+
+      socket.on('new-round', function(data){
+        p.set('trumpher', data.trumphs.playerId == omiGameConf.playerId);
+
+        data.hand.forEach(function(card){
+          var c = g.createCard(card);
+
+          c.set('clickHandler', function(){
+            p.takeCard(c);      
+            socket.emit('card-played', data = {
+              gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
+              card: c
+            });
+          });
+          p.giveCard(c);
+        });
+
+        if(p.get('trumpher') && (g.get('players').length==4) && data.status==2){
+          $('#trumphs-pick').css('visibility', 'visible')
+        }
+      })
+
       socket.on('other-player-got-first-hand', function(data){
         console.log(data);
-        var pl = g.createPlayer({id:data.id, name:'Alex'});
+        var pl = g.createPlayer({id: data.id, name: data.name});
 
-        if(p.get('trumpher') && (g.get('players').length==4)){
+        if(p.get('trumpher') && (g.get('players').length==4) && data.status==2){
           $('#trumphs-pick').css('visibility', 'visible')
         }
       });
@@ -61,11 +86,14 @@ require(['jquery', 'models/game'], function($, game){
         t.placeCard(g.createCard(data.card), data.player)
         if(data.winner){
           setTimeout(function(){
-            $('#message').html('p' + data.winner + 'Won that hand!');
+            $('#message').html(data.winner + ' Won that hand!');
             $('#message').css('visibility', 'visible');
             setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
             t.clear();
-          },2000)
+            if(!p.get('cards').length){ // if all cards are over
+              socket.emit('round', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
+            }
+          }, 2000)
         }
       });
 
@@ -118,7 +146,13 @@ require(['jquery', 'models/game'], function($, game){
     })
 
     socket.on('connect', function(){
-      socket.emit('start', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
+      var details = {
+        gameId: omiGameConf.gameId,
+        playerId: omiGameConf.playerId,
+        name: "Player " + omiGameConf.playerId
+      }
+
+      socket.emit('start', details);
     });
   });
 });

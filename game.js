@@ -14,6 +14,7 @@ client.auth(redisPass, function(){
 })
 
 var gameStatus = {
+  NO_GAME: 0,
   WAITING_PLAYER_JOIN: 1,
   WAITING_TRUMPS_PICK: 2,
   WAITING_CARD_PLAY: 3
@@ -22,12 +23,14 @@ var gameStatus = {
 
 function registerGame(callback){
   client.incr('omi-games', function(err, gameId){
-    createDeck(gameId, 1, function(deck){
-      addInitialHands(gameId, deck, function(){
-        setTurn(gameId, 1, function(){;
-          createPlayers(gameId, function(){
-            setTrumps(gameId, {playerId: 1}, function(){
-              callback(gameId);
+    setStatus(gameId, gameStatus.WAITING_PLAYER_JOIN, function(){
+      createDeck(gameId, 1, function(deck){
+        addInitialHands(gameId, deck, function(){
+          setTurn(gameId, 1, function(){;
+            createPlayers(gameId, function(){
+              setTrumps(gameId, {playerId: 1}, function(){
+                callback(gameId);
+              });
             });
           });
         });
@@ -56,13 +59,21 @@ function registerPlayer(gameId, callback){
 }
 
 
+function registerRound(gameId, round, callback){
+  createDeck(gameId, 1, function(deck){
+    addInitialHands(gameId, deck, function(){
+      callback(gameId);
+    });
+  });
+}
+
+
 function random(){
   return crypto.randomBytes(8).toString('hex')
 }
 
 
 function setStatus(gameId, status, callback){
-  console.log(">>>>>>>LLLLLL----" + status)
   client.set('g' + gameId + 'status', status, function(){
     callback(status);
   });
@@ -72,7 +83,7 @@ function setStatus(gameId, status, callback){
 function getStatus(gameId, callback){
   client.get('g' + gameId + 'status', function(err, status){
     if(!status)
-      status="2"
+      status="0"
     callback(parseInt(status));
   });
 }
@@ -153,6 +164,15 @@ function addPlayer(gameId, playerId, player, callback){
     if(err)
       throw err;
     callback(player)
+  });
+}
+
+
+function getPlayer(gameId, playerId, callback){
+  client.lindex('players-'+gameId, (playerId-1), function(err, player){
+    if(err)
+      throw err;
+    callback(JSON.parse(player))
   });
 }
 
@@ -326,6 +346,23 @@ function resetTable(gameId, winner, callback){
 }
 
 
+function resetRound(gameId, callback){
+
+  client.del('g'+gameId+'r1'+'deck');
+    getTrumps(gameId, function(trumphs){
+      var playerId = trumphs.playerId;
+      var newPid = (playerId%4)+1
+      setTrumps(gameId, {playerId: newPid}, function(){
+        setTurn(gameId, newPid, function(){
+          setStatus(gameId, gameStatus.WAITING_TRUMPS_PICK, function(){
+            callback();
+          })
+        })
+      })
+    })
+  }
+
+
 function gameBegined(gameId, callback){
   getTrumps(gameId, function(trumphs){
     console.log(JSON.stringify(trumphs))
@@ -421,6 +458,7 @@ Game.prototype.connectOtherPlayers = function(id, callback){
 exports.getGame = getGame;
 exports.registerGame = registerGame;
 exports.registerPlayer = registerPlayer;
+exports.registerRound = registerRound;
 exports.setTrumps = setTrumps;
 exports.getTrumps = getTrumps;
 exports.setHand = setHand;
@@ -432,6 +470,7 @@ exports.getTurn = getTurn;
 exports.addToTable = addToTable;
 exports.getTable = getTable;
 exports.resetTable = resetTable;
+exports.resetRound = resetRound;
 exports.gameBegined = gameBegined;
 exports.getGameBySec = getGameBySec;
 exports.gameStatus = gameStatus;
@@ -439,3 +478,5 @@ exports.setStatus = setStatus;
 exports.getStatus = getStatus;
 exports.getPlayers = getPlayers;
 exports.addPlayer = addPlayer;
+exports.getPlayer = getPlayer;
+exports.createDeck = createDeck;
