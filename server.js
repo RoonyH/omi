@@ -97,7 +97,7 @@ io.on('connection', function (socket) {
         };
 
         if(winner){
-          details.winner = winner.name
+          details.winner = winner
         }
 
         io.to(player.socketId).emit('played-card', details);

@@ -85,8 +85,9 @@ require(['jquery', 'models/game'], function($, game){
         console.log(data);
         t.placeCard(g.createCard(data.card), data.player)
         if(data.winner){
+          g.set('winner', data.winner)
           setTimeout(function(){
-            $('#message').html(data.winner + ' Won that hand!');
+            $('#message').html(data.winner.name + ' Won that hand!');
             $('#message').css('visibility', 'visible');
             setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
             t.clear();
