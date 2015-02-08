@@ -61,8 +61,10 @@ exports.game = function(opt, callback){
 
   gameModule.getStatus(gameId, function(status){
 
-    if(!status)
+    if(!status){
+      console.log("Not!")
       return;
+    }
 
     gameModule.getHand(gameId, playerId, function(hand){
 
@@ -72,19 +74,19 @@ exports.game = function(opt, callback){
       gameModule.getTable(gameId, function(table){
         gameModule.getPlayers(gameId, function(err, players){
           gameModule.getTurn(gameId, function(turn){
-            gameModule.getTrumps(gameId, function(trumphs){
+            gameModule.getTrumpher(gameId, function(trumpher){
+              console.log("---" + trumpher)
               gameModule.addPlayer(gameId, playerId, player, function(){
                 var details = {
                   hand: hand,
                   table: table,
                   players: players,
-                  trumphs: trumphs,
+                  trumpher: trumpher,
                   status: status,
                   turn: turn
                 }
 
                 if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
-                  console.log('pppppppppppppppppppppppppppppppppppppppppp'+players.length)
                   gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
                     details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
 
@@ -112,13 +114,8 @@ exports.round = function(opt, callback){
       callback("Previous round still on");
       return;
     } else {
-      gameModule.registerRound(gameId, 1, function(){
-        gameModule.getTrumps(gameId, function(trumphs){
-          gameModule.getGame(gameId, function(game){
-            game.trumphs = trumphs;
-            callback(null, game);
-          });
-        });
+      gameModule.newRound(gameId, playerId, function(err, round){
+        callback(null, round)
       })
     }
   });
@@ -126,32 +123,26 @@ exports.round = function(opt, callback){
 
 
 exports.trumpsPicked = function(data, callback){
-  gameModule.setStatus(data.gameId, gameModule.gameStatus.WAITING_CARD_PLAY, function(){
-    gameModule.getTrumps(data.gameId, function(t){
-      if(t.playerId == data.playerId){
+  gameModule.getTrumpher(data.gameId, function(t){
+    if(t == data.playerId){
 
-        trumphKind = {
-          Clubs: "c",
-          Hearts: "h",
-          Spades: "s",
-          Diamonds: "d"
-        }
+      trumphKind = {
+        Clubs: "c",
+        Hearts: "h",
+        Spades: "s",
+        Diamonds: "d"
+      }
 
-        opt = {
-          gameId: data.gameId,
-          playerId: data.playerId,
-          kind: trumphKind[data.trumphs]
-        }
-
-        gameModule.setTrumps(data.gameId, opt, function(){
+      gameModule.setTrumphs(data.gameId, trumphKind[data.trumphs], function(){
+        gameModule.setStatus(data.gameId, gameModule.gameStatus.WAITING_CARD_PLAY, function(){
           gameModule.getGame(data.gameId, function(game){
             callback(null, game);
           });
         });
-      } else {
-        callback("You are not the player to pick trumps", null);
-      }
-    });
+      });
+    } else {
+      callback("You are not the player to pick trumphs", null);
+    }
   });
 }
 
@@ -185,9 +176,9 @@ exports.cardPlayed = function(data, callback){
     return index;
   }
 
-  gameModule.gameBegined(gameId, function(begined){
+  gameModule.getStatus(gameId, function(status){
 
-    if(!begined){
+    if(status!=gameModule.gameStatus.WAITING_CARD_PLAY){
       callback("Not started yet");
       return;
     }
@@ -207,71 +198,24 @@ exports.cardPlayed = function(data, callback){
     console.log("Card Index: "+index);
 
     if(index===-1){
-      callback("You don't have that fking card");
+      callback("You don't have that card");
       return;
     }
 
     gameModule.getHandKind(gameId, function(kind){
       if(kind==='n'){ // kind is not set yet. this is the first card in this game-hand
         gameModule.setHandKind(gameId, card.kind, function(){
+          handleCardPlay(gameId, playerId, card, hand, index, turn, callback)
 
-          hand.splice(index, 1);
-          gameModule.setHand(gameId, playerId, hand, function(){
-            gameModule.setTurn(gameId, (turn%4)+1, function(){
-              card.pid = playerId;
-              gameModule.addToTable(data.gameId, card, function(game){
-                gameModule.getGame(data.gameId, function(game){
-                  checkWinner(data.gameId, function(winner){
-                    if(winner){
-                      gameModule.resetTable(data.gameId, winner.playerId, function(){
-                        if(!hand.length){
-                          gameModule.resetRound(data.gameId, function(){
-                            callback(null, game, winner);
-                          })
-                        } else {
-                          callback(null, game, winner);
-                        }
-                      })
-                      return;
-                    }
-                    callback(null, game, winner);
-                  })
-                });
-              });
-            });
-          });
 
         });
       } else {
         if(kind===card.kind){ //player is playing a card that match game-hand kind. no worries.
 
-          hand.splice(index, 1);
-          gameModule.setHand(gameId, playerId, hand, function(){
-            gameModule.setTurn(gameId, (turn%4)+1, function(){
-              card.pid = playerId;
-              gameModule.addToTable(data.gameId, card, function(game){
-                gameModule.getGame(data.gameId, function(game){
-                  checkWinner(data.gameId, function(winner){
-                    if(winner){
-                      gameModule.resetTable(data.gameId, winner.playerId, function(){
-                        if(!hand.length){
-                          gameModule.resetRound(data.gameId, function(){
-                            callback(null, game, winner);
-                          })
-                        } else {
-                          callback(null, game, winner);
-                        }
-                      })
-                      return;
-                    }
-                    callback(null, game, winner);
-                  })
-                });
-              });
-            });
-          });
+          handleCardPlay(gameId, playerId, card, hand, index, turn, callback)
 
-        } else { //players card does not match the game-hand kind. worry. need to check if they are allowed to play
+        } else { //players card does not match the game-hand kind. worry. need to check
+        // if they are allowed to play
           //check if player has no cards matching the gamehand kind. TODO
 
           var kindIndex = findCardKind(kind, hand);
@@ -283,32 +227,7 @@ exports.cardPlayed = function(data, callback){
             return
           }
 
-          hand.splice(index, 1);
-          gameModule.setHand(gameId, playerId, hand, function(){
-            gameModule.setTurn(gameId, (turn%4)+1, function(){
-              card.pid = playerId;
-              gameModule.addToTable(data.gameId, card, function(game){
-                gameModule.getGame(data.gameId, function(game){
-                  checkWinner(data.gameId, function(winner){
-                    if(winner){
-                      gameModule.resetTable(data.gameId, winner.playerId, function(){
-                        if(!hand.length){
-                          gameModule.resetRound(data.gameId, function(){
-                            callback(null, game, winner);
-                          })
-                        } else {
-                          callback(null, game, winner);
-                        }
-                      })
-                      return;
-                    }
-                    callback(null, game, winner);
-                  })
-                });
-              });
-            });
-          });
-
+          handleCardPlay(gameId, playerId, card, hand, index, turn, callback)
         }
       }
     });
@@ -316,8 +235,41 @@ exports.cardPlayed = function(data, callback){
   });
   });
   
+  
+  function handleCardPlay(gameId, playerId, card, hand, index, turn, callback){
+    hand.splice(index, 1);
+    gameModule.setHand(gameId, playerId, hand, function(){
+      gameModule.setTurn(gameId, (turn%4)+1, function(){
+        card.pid = playerId;
+        gameModule.addToTable(gameId, card, function(game){
+          gameModule.getGame(gameId, function(game){
+            checkWinner(gameId, function(winner){
+              if(winner){
+                gameModule.resetTable(gameId, winner.playerId, function(){
+                  gameModule.getScore(gameId, function(score){
+                    game.score = score;
+                    if(!hand.length){
+                      gameModule.registerRound(gameId, function(){
+                        callback(null, game, winner);
+                      })
+                    } else {
+                      callback(null, game, winner);
+                    }
+                  });
+                })
+                return;
+              }
+              callback(null, game, winner);
+            })
+          });
+        });
+      });
+    });
+  }
+
+
   function checkWinner(gameId, callback){
-    gameModule.getTrumps(gameId, function(trumps){
+    gameModule.getTrumphs(gameId, function(trumphs){
     gameModule.getHandKind(gameId, function(handkind){
       gameModule.getTable(gameId, function(table){
         var winner = 1;
@@ -329,7 +281,7 @@ exports.cardPlayed = function(data, callback){
             cardvalue = 14;
           }
 
-          if(card.kind===trumps.kind){
+          if(card.kind===trumphs){
             cardvalue+=40;
           }
 

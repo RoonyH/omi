@@ -24,15 +24,9 @@ var gameStatus = {
 function registerGame(callback){
   client.incr('omi-games', function(err, gameId){
     setStatus(gameId, gameStatus.WAITING_PLAYER_JOIN, function(){
-      createDeck(gameId, 1, function(deck){
-        addInitialHands(gameId, deck, function(){
-          setTurn(gameId, 1, function(){;
-            createPlayers(gameId, function(){
-              setTrumps(gameId, {playerId: 1}, function(){
-                callback(gameId);
-              });
-            });
-          });
+      createPlayers(gameId, function(){
+        registerRound(gameId, function(){
+          callback(gameId);
         });
       });
     });
@@ -59,10 +53,31 @@ function registerPlayer(gameId, callback){
 }
 
 
-function registerRound(gameId, round, callback){
+function registerRound(gameId, callback){
+  var getFirstHand = function(deck, playerId){
+    return deck.slice((playerId-1)*4, (playerId-1)*4+4);
+  }
+
+  var getSecondHand = function(deck, playerId){
+    return deck.slice(16 + (playerId-1)*4, 16 + (playerId-1)*4+4);
+  }
+
   createDeck(gameId, 1, function(deck){
-    addInitialHands(gameId, deck, function(){
-      callback(gameId);
+    client.hincrby('g1', 'round', 1, function(err, round){
+      client.hmset('g1',
+        'status', gameStatus.WAITING_TRUMPS_PICK,
+        'p1hand', JSON.stringify(getFirstHand(deck, 1).concat(getSecondHand(deck, 1))),
+        'p2hand', JSON.stringify(getFirstHand(deck, 2).concat(getSecondHand(deck, 2))),
+        'p3hand', JSON.stringify(getFirstHand(deck, 3).concat(getSecondHand(deck, 3))),
+        'p4hand', JSON.stringify(getFirstHand(deck, 4).concat(getSecondHand(deck, 4))),
+        'p1wins', 0,
+        'p2wins', 0,
+        'p3wins', 0,
+        'p4wins', 0,
+        'turn', (round-1)%4+1,
+        'trumpher', (round-1)%4+1,
+        callback
+      )
     });
   });
 }
@@ -74,14 +89,14 @@ function random(){
 
 
 function setStatus(gameId, status, callback){
-  client.set('g' + gameId + 'status', status, function(){
+  client.hset('g' + gameId, 'status', status, function(){
     callback(status);
   });
 }
 
 
 function getStatus(gameId, callback){
-  client.get('g' + gameId + 'status', function(err, status){
+  client.hget('g' + gameId, 'status', function(err, status){
     if(!status)
       status="0"
     callback(parseInt(status));
@@ -114,6 +129,22 @@ function getGame(id, callback){
       callback(game);
     });
   });
+}
+
+function getScore(id, callback){
+  console.log('looking for score of game: ' + id);
+
+  client.hmget('g'+id,
+    'p1wins', 'p2wins', 'p3wins', 'p4wins',
+    function(err, res){
+      var score = {
+        teamA: parseInt(res[0]) + parseInt(res[2]),
+        teamB: parseInt(res[1]) + parseInt(res[3])
+      }
+
+      callback(score)
+    }
+  );
 }
 
 
@@ -182,31 +213,22 @@ function createDeck(gameId, roundId, callback){
 
   var deckId = 'g' + gameId + 'r' + roundId + 'deck';
 
-  client.get(deckId, function(err, deck){
-    if(deck){
-      var deck = JSON.parse(deck);
-      callback(deck);
-      return;
-    } else {
+  var kinds = ['c', 'd', 'h', 's'];
+  var values = [1, 7, 8, 9, 10, 11, 12, 13];
 
-      var kinds = ['c', 'd', 'h', 's'];
-      var values = [1, 7, 8, 9, 10, 11, 12, 13];
+  var deck = [];
 
-      var deck = [];
+  kinds.forEach(function(kind){
+    values.forEach(function(value){
+      deck.push({kind: kind, value: value});
+    });
+  });
 
-      kinds.forEach(function(kind){
-        values.forEach(function(value){
-          deck.push({kind: kind, value: value});
-        });
-      });
+  deck = underscore.shuffle(deck)
 
-      deck = underscore.shuffle(deck)
-
-      client.set(deckId, JSON.stringify(deck), function(){
-        callback(deck);
-        return;
-      });
-    }
+  client.set(deckId, JSON.stringify(deck), function(){
+    callback(deck);
+    return;
   });
 }
 
@@ -238,22 +260,20 @@ function addInitialHands(gameId, deck, callback){
 
 
 function setHand(gameId, playerId, hand, callback){
-  var handId = 'g' + gameId + 'p' + playerId + 'hand';
-
-  client.set(handId, JSON.stringify(hand), function(){
-    callback(hand);
-    return;
-  });
+  client.hset('g'+gameId, 'p' + playerId + 'hand', JSON.stringify(hand),
+    function(){
+      callback(hand);
+      return;
+    });
 }
 
 
 function getHand(gameId, playerId, callback){
-  var handId = 'g' + gameId + 'p' + playerId + 'hand';
-
-  client.get(handId, function(err, hand){
-    callback(JSON.parse(hand));
-    return;
-  });
+  client.hget('g'+gameId, 'p' + playerId + 'hand',
+    function(err, hand){
+      callback(JSON.parse(hand));
+      return;
+    });
 }
 
 
@@ -275,9 +295,9 @@ function getHandKind(gameId, callback){
 }
 
 
-function setTrumps(id, trumps, callback){
-  console.log('setting trumps: ' + trumps);
-  client.set('trumps-'+id, JSON.stringify(trumps), function(err, t){
+function setTrumphs(gameId, trumphs, callback){
+  console.log('setting trumphs: ' + trumphs);
+  client.hset('g'+gameId, 'trumphs', trumphs, function(err, t){
     if(err)
       throw err;
     callback(t);
@@ -285,13 +305,25 @@ function setTrumps(id, trumps, callback){
 }
 
 
-function getTrumps(id, callback){
+function getTrumphs(id, callback){
   console.log('getting trumps for: ' + id);
-  client.get('trumps-'+id, function(err, trumps){
+  client.hget('g'+id, 'trumphs', function(err, trumphs){
     if(err)
       throw err;
-    if(trumps)
-      callback(JSON.parse(trumps));
+    if(trumphs)
+      callback(trumphs);
+    else
+      throw "No trumps set";
+  });
+}
+
+function getTrumpher(id, callback){
+  console.log('getting trumphers for: ' + id);
+  client.hget('g'+id, 'trumpher', function(err, trumpher){
+    if(err)
+      throw err;
+    if(trumpher)
+      callback(trumpher);
     else
       throw "No trumps set";
   });
@@ -299,7 +331,7 @@ function getTrumps(id, callback){
 
 
 function setTurn(gameId, turn, callback){
-  client.set('g'+gameId+'turn', turn, function(){
+  client.hset('g'+gameId, 'turn', turn, function(){
     callback(turn);
     return;
   });
@@ -307,7 +339,7 @@ function setTurn(gameId, turn, callback){
 
 
 function getTurn(gameId, callback){
-  client.get('g'+gameId+'turn', function(err, turn){
+  client.hget('g'+gameId, 'turn', function(err, turn){
     callback(parseInt(turn));
     return;
   });
@@ -337,31 +369,32 @@ function getTable(gameId, callback){
 
 function resetTable(gameId, winner, callback){
   client.del('g'+gameId+'table')
-  setTurn(gameId, winner, function(){
-    setHandKind(gameId, 'n', function(){
-      callback();
-    });  
-  })
+  client.hincrby('g'+gameId, 'p' + winner + 'wins', 1, function(err, res){
+    console.log('adoee' + res)
+    setTurn(gameId, winner, function(){
+      setHandKind(gameId, 'n', function(){
+        callback();
+      });  
+    });
+  });
 
 }
 
 
-function resetRound(gameId, callback){
+function newRound(gameId, playerId, callback){
 
-  client.del('g'+gameId+'r1'+'deck');
-    getTrumps(gameId, function(trumphs){
-      var playerId = trumphs.playerId;
-      var newPid = (playerId%4)+1
-      setTrumps(gameId, {playerId: newPid}, function(){
-        setTurn(gameId, newPid, function(){
-          setStatus(gameId, gameStatus.WAITING_TRUMPS_PICK, function(){
-            callback();
-          })
-        })
-      })
-    })
-  }
+  client.hmget('g'+gameId, 'p'+playerId+'hand', 'trumpher',
+    function(err, result){
+      var hand = result[0];
+      var trumpher = result[1];
 
+      callback(err, {
+        hand: JSON.parse(hand).splice(0, 4),
+        trumpher: trumpher
+      });
+    }
+  );
+}
 
 function gameBegined(gameId, callback){
   getTrumps(gameId, function(trumphs){
@@ -459,8 +492,8 @@ exports.getGame = getGame;
 exports.registerGame = registerGame;
 exports.registerPlayer = registerPlayer;
 exports.registerRound = registerRound;
-exports.setTrumps = setTrumps;
-exports.getTrumps = getTrumps;
+exports.setTrumphs = setTrumphs;
+exports.getTrumphs = getTrumphs;
 exports.setHand = setHand;
 exports.getHand = getHand;
 exports.setHandKind = setHandKind;
@@ -470,7 +503,7 @@ exports.getTurn = getTurn;
 exports.addToTable = addToTable;
 exports.getTable = getTable;
 exports.resetTable = resetTable;
-exports.resetRound = resetRound;
+exports.newRound = newRound;
 exports.gameBegined = gameBegined;
 exports.getGameBySec = getGameBySec;
 exports.gameStatus = gameStatus;
@@ -480,3 +513,5 @@ exports.getPlayers = getPlayers;
 exports.addPlayer = addPlayer;
 exports.getPlayer = getPlayer;
 exports.createDeck = createDeck;
+exports.getTrumpher = getTrumpher;
+exports.getScore = getScore;

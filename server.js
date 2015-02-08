@@ -48,7 +48,7 @@ io.on('connection', function (socket) {
       gameDetails = {
         hand: game.hand,
         players: game.players,
-        trumphs: game.trumphs,
+        trumpher: game.trumpher,
         table: game.table,
         status: game.status
       }
@@ -93,7 +93,8 @@ io.on('connection', function (socket) {
       game.players.forEach(function(player){
         details = {
           player: data.playerId,
-          card: data.card
+          card: data.card,
+          score: game.score
         };
 
         if(winner){
@@ -115,8 +116,8 @@ io.on('connection', function (socket) {
 
     routes.round(opt, function(err, game){
       gameDetails = {
-        hand: game.getPlayerFirstHand(data.playerId),
-        trumphs: game.trumphs,
+        hand: game.hand,
+        trumpher: game.trumpher,
         players: [],
         table: [],
         status: 2 // WAITING_TRUMPHS_PICK

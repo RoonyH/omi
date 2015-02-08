@@ -18,7 +18,7 @@ require(['jquery', 'models/game'], function($, game){
       p = g.createPlayer({
         id: omiGameConf.playerId,
         name:'Player ' + omiGameConf.playerId,
-        trumpher: (data.trumphs.playerId == omiGameConf.playerId)
+        trumpher: (data.trumpher == omiGameConf.playerId)
       });
       t = g.createTable({id: 1});
       data.hand.forEach(function(card){
@@ -52,7 +52,7 @@ require(['jquery', 'models/game'], function($, game){
       }
 
       socket.on('new-round', function(data){
-        p.set('trumpher', data.trumphs.playerId == omiGameConf.playerId);
+        p.set('trumpher', data.trumpher == omiGameConf.playerId);
 
         data.hand.forEach(function(card){
           var c = g.createCard(card);
