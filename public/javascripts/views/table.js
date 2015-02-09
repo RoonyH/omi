@@ -19,6 +19,22 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
       };
       this.$el.addClass('game-table');
       this.$el.html(Mustache.render(this.template, table));
+
+      this.$('.trumph-button').click(function(){
+        p.set('trumpher', false)
+
+        socket.emit('trumphs-picked', data = {
+          gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
+          trumphs: $($(this).children()[0]).html()
+        })
+        
+        $('#trumphs-picker').css('visibility', 'hidden')
+      })
+
+      if(p.get('trumpher') && (g.get('players').length==4)){
+        $('#trumphs-picker').css('visibility', 'visible')
+      }
+
       return this.$el;
     },
 

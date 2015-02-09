@@ -61,25 +61,53 @@ function registerRound(gameId, callback){
   var getSecondHand = function(deck, playerId){
     return deck.slice(16 + (playerId-1)*4, 16 + (playerId-1)*4+4);
   }
-
-  createDeck(gameId, 1, function(deck){
-    client.hincrby('g1', 'round', 1, function(err, round){
-      client.hmset('g1',
-        'status', gameStatus.WAITING_TRUMPS_PICK,
-        'p1hand', JSON.stringify(getFirstHand(deck, 1).concat(getSecondHand(deck, 1))),
-        'p2hand', JSON.stringify(getFirstHand(deck, 2).concat(getSecondHand(deck, 2))),
-        'p3hand', JSON.stringify(getFirstHand(deck, 3).concat(getSecondHand(deck, 3))),
-        'p4hand', JSON.stringify(getFirstHand(deck, 4).concat(getSecondHand(deck, 4))),
-        'p1wins', 0,
-        'p2wins', 0,
-        'p3wins', 0,
-        'p4wins', 0,
-        'turn', (round-1)%4+1,
-        'trumpher', (round-1)%4+1,
-        callback
-      )
+  setRoundWins(gameId, function(){
+    createDeck(gameId, 1, function(deck){
+      client.hincrby('g1', 'round', 1, function(err, round){
+        client.hmset('g1',
+          'status', gameStatus.WAITING_TRUMPS_PICK,
+          'p1hand', JSON.stringify(getFirstHand(deck, 1).concat(getSecondHand(deck, 1))),
+          'p2hand', JSON.stringify(getFirstHand(deck, 2).concat(getSecondHand(deck, 2))),
+          'p3hand', JSON.stringify(getFirstHand(deck, 3).concat(getSecondHand(deck, 3))),
+          'p4hand', JSON.stringify(getFirstHand(deck, 4).concat(getSecondHand(deck, 4))),
+          'p1wins', 0,
+          'p2wins', 0,
+          'p3wins', 0,
+          'p4wins', 0,
+          'turn', (round-1)%4+1,
+          'trumpher', (round-1)%4+1,
+          callback
+        )
+      });
     });
   });
+}
+
+
+function setRoundWins(id, callback){  
+  client.hmget('g'+id,
+    'p1wins', 'p2wins', 'p3wins', 'p4wins',
+    function(err, res){
+      var score = {
+        teamA: parseInt(res[0]) + parseInt(res[2]),
+        teamB: parseInt(res[1]) + parseInt(res[3])
+      }
+
+      var wonteam = "draw"
+
+      if(score.teamB > score.teamA){
+        wonteam = 'teamBwins'
+      }
+
+      if(score.teamB < score.teamA){
+        wonteam = 'teamAwins'
+      }
+
+      client.hincrby('g'+id, wonteam, 1, function(){
+        callback(wonteam)
+      })
+    }
+  );  
 }
 
 
@@ -135,11 +163,14 @@ function getScore(id, callback){
   console.log('looking for score of game: ' + id);
 
   client.hmget('g'+id,
-    'p1wins', 'p2wins', 'p3wins', 'p4wins',
+    'p1wins', 'p2wins', 'p3wins', 'p4wins', 'teamAwins', 'teamBwins',
     function(err, res){
       var score = {
         teamA: parseInt(res[0]) + parseInt(res[2]),
-        teamB: parseInt(res[1]) + parseInt(res[3])
+        teamB: parseInt(res[1]) + parseInt(res[3]),
+        roundTeamA: parseInt(res[4])||0,
+        roundTeamB: parseInt(res[5])||0
+
       }
 
       callback(score)

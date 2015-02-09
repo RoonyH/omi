@@ -29,6 +29,7 @@ define(['jquery', 'backbone', 'views/card', 'underscore'], function($, Backbone,
 
     givenCard: function(card){
       var cv = new cardView.CardView({model: card});
+      cv.$el.addClass('player-card')
       var obj = {};
 
       var value = card.get('value');

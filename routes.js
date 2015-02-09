@@ -74,6 +74,7 @@ exports.game = function(opt, callback){
       gameModule.getTable(gameId, function(table){
         gameModule.getPlayers(gameId, function(err, players){
           gameModule.getTurn(gameId, function(turn){
+            gameModule.getScore(gameId, function(score){
             gameModule.getTrumpher(gameId, function(trumpher){
               console.log("---" + trumpher)
               gameModule.addPlayer(gameId, playerId, player, function(){
@@ -83,7 +84,8 @@ exports.game = function(opt, callback){
                   players: players,
                   trumpher: trumpher,
                   status: status,
-                  turn: turn
+                  turn: turn,
+                  score: score
                 }
 
                 if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
@@ -96,6 +98,7 @@ exports.game = function(opt, callback){
                   callback(details)
                 }
               });
+            });
             });
           });
         });

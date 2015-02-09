@@ -50,7 +50,8 @@ io.on('connection', function (socket) {
         players: game.players,
         trumpher: game.trumpher,
         table: game.table,
-        status: game.status
+        status: game.status,
+        score: game.score
       }
 
       socket.emit('game', gameDetails);

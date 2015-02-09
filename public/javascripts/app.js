@@ -48,8 +48,13 @@ require(['jquery', 'models/game'], function($, game){
       });
 
       if(p.get('trumpher') && (g.get('players').length==4) && data.status==2){
-        $('#trumphs-pick').css('visibility', 'visible')
+        $('#trumphs-picker').css('visibility', 'visible')
       }
+
+      $("#red-hand-wins").html(data.score.teamB)
+      $("#black-hand-wins").html(data.score.teamA)
+      $("#red-round-wins").html(data.score.roundTeamB)
+      $("#black-round-wins").html(data.score.roundTeamA)
 
       socket.on('new-round', function(data){
         p.set('trumpher', data.trumpher == omiGameConf.playerId);
@@ -68,7 +73,7 @@ require(['jquery', 'models/game'], function($, game){
         });
 
         if(p.get('trumpher') && (g.get('players').length==4) && data.status==2){
-          $('#trumphs-pick').css('visibility', 'visible')
+          $('#trumphs-picker').css('visibility', 'visible')
         }
       })
 
@@ -77,7 +82,7 @@ require(['jquery', 'models/game'], function($, game){
         var pl = g.createPlayer({id: data.id, name: data.name});
 
         if(p.get('trumpher') && (g.get('players').length==4) && data.status==2){
-          $('#trumphs-pick').css('visibility', 'visible')
+          $('#trumphs-picker').css('visibility', 'visible')
         }
       });
 
@@ -95,6 +100,11 @@ require(['jquery', 'models/game'], function($, game){
               socket.emit('round', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
             }
           }, 2000)
+
+          $("#red-hand-wins").html(data.score.teamB)
+          $("#black-hand-wins").html(data.score.teamA)
+          $("#red-round-wins").html(data.score.roundTeamB)
+          $("#black-round-wins").html(data.score.roundTeamA)
         }
       });
 
@@ -135,16 +145,6 @@ require(['jquery', 'models/game'], function($, game){
       });
     });
 
-    $('.trumph-button').click(function(){
-      p.set('trumpher', false)
-
-      socket.emit('trumphs-picked', data = {
-        gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
-        trumphs: $($(this).children()[0]).html()
-      })
-      
-      $('#trumphs-pick').css('visibility', 'hidden')
-    })
 
     socket.on('connect', function(){
       var details = {
