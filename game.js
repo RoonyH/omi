@@ -26,7 +26,9 @@ function registerGame(callback){
     setStatus(gameId, gameStatus.WAITING_PLAYER_JOIN, function(){
       createPlayers(gameId, function(){
         registerRound(gameId, function(){
-          callback(gameId);
+          client.rpush('opengames', gameId, function(){
+            callback(gameId);
+          });
         });
       });
     });
@@ -41,6 +43,12 @@ function registerPlayer(gameId, callback){
       //Game is full
       callback('Game is full', null, null)
       return;
+    }
+
+    if(id==4){
+      client.lrem('opengames', gameId, 1, function(){
+
+      })
     }
 
     sec = random();
@@ -63,8 +71,8 @@ function registerRound(gameId, callback){
   }
   setRoundWins(gameId, function(){
     createDeck(gameId, 1, function(deck){
-      client.hincrby('g1', 'round', 1, function(err, round){
-        client.hmset('g1',
+      client.hincrby('g'+gameId, 'round', 1, function(err, round){
+        client.hmset('g'+gameId,
           'status', gameStatus.WAITING_TRUMPS_PICK,
           'p1hand', JSON.stringify(getFirstHand(deck, 1).concat(getSecondHand(deck, 1))),
           'p2hand', JSON.stringify(getFirstHand(deck, 2).concat(getSecondHand(deck, 2))),
@@ -81,6 +89,19 @@ function registerRound(gameId, callback){
       });
     });
   });
+}
+
+
+function getOpenGame(callback){
+  client.lrange('opengames', 0, 0, function(err, games){
+    console.log(games[0] + " --------------------------kkkk")
+
+    if(games){
+      callback(games[0]);
+    } else {
+      callback(null);
+    }
+  })
 }
 
 
@@ -546,3 +567,4 @@ exports.getPlayer = getPlayer;
 exports.createDeck = createDeck;
 exports.getTrumpher = getTrumpher;
 exports.getScore = getScore;
+exports.getOpenGame = getOpenGame;

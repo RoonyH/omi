@@ -28,20 +28,36 @@ exports.index = function(req, res){
       return
     }
 
-    if(query.gameId!='new'){
-      var gameId = parseInt(query.gameId);
-    
-      gameModule.registerPlayer(gameId, function(err, playerId, sec){
-        res.cookie('sec', sec)
-        res.render('game', {gameId: gameId, playerId: playerId});
-      });
-    } else {
+    if(query.gameId==='new'){
+
       gameModule.registerGame(function(gameId){
         gameModule.registerPlayer(gameId, function(err, playerId, sec){
           res.cookie('sec', sec)
           res.render('game', {gameId: gameId, playerId: playerId});
         });
       });
+
+    } else {
+
+
+      if(query.gameId==='join'){
+
+        gameModule.getOpenGame(function(gameId){
+          gameModule.registerPlayer(gameId, function(err, playerId, sec){
+            res.cookie('sec', sec)
+            res.render('game', {gameId: gameId, playerId: playerId});
+          });
+        });
+
+      } else {
+
+        var gameId = parseInt(query.gameId);
+      
+        gameModule.registerPlayer(gameId, function(err, playerId, sec){
+          res.cookie('sec', sec)
+          res.render('game', {gameId: gameId, playerId: playerId});
+        });
+      }
     }
   }
 };

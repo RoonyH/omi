@@ -1,6 +1,4 @@
-<divd id="message" class="message-user">
-  Thanks for playing :)
-</div>
+
 <!--templates-->
 <script id="template-card" type="x-tmpl-mustache">
   <img src="{{url}}" class="img-card">
@@ -14,8 +12,10 @@
 <!--end of templates-->
 
 <!--thirdparty libs-->
+<script src="//connect.facebook.net/en_US/sdk.js"></script>
 <script src="javascripts/thirdparty/mustache.js"></script>
+<script src="javascripts/thirdparty/socket.io-1.1.0.js"></script>
 <!--end of thirdparty libs-->
 
-<script src="javascripts/thirdparty/socket.io-1.1.0.js"></script>
+<script src="javascripts/fb-connect.js"></script>
 <script data-main="javascripts/app.js" src="javascripts/require.js"></script>

@@ -3,6 +3,37 @@ body {
   background-color: rgb(142, 131, 131); 
 }
 
+.half {
+  font: bold 200% Courgette, cursive, sans-serif;
+  display: inline-block;
+  width: 50%;
+  height: 50%;
+  vertical-align: top;
+  text-align: center;
+}
+
+.cont-create {
+  background-color: rgb(58, 53, 53); 
+  color: rgb(237, 223, 223);
+  padding: 5%;
+  height: 100%;
+}
+
+.cont-create p {
+  height: 75%
+}
+
+.cont-join {
+  background-color: rgb(208, 63, 68);
+  color: rgb(237, 223, 223);
+  padding: 5%;
+  height: 100%;
+}
+
+.cont-join p {
+  height: 75%
+}
+
 #score-board{
   background-color: rgb(110, 70, 70);
   display: inline-block;
@@ -30,12 +61,12 @@ body {
 
 #score-board #red-round-wins{
   background-color: rgb(208, 63, 68);
-  color: white;
+  color: rgb(237, 223, 223);
 }
 
 #score-board #black-round-wins{
   background-color: rgb(58, 53, 53);
-  color: white;
+  color: rgb(237, 223, 223);
 }
 
 #score-board th{
@@ -47,13 +78,35 @@ body {
   width: 100%
 }
 
+#message{
+  visibility: hidden;
+  background-color: rgb(237, 223, 223);
+  top: 0;
+  width: 100%;
+  position: absolute;
+  font: bold 30px/40px Courgette, cursive, sans-serif;
+  text-align: center;
+  z-index: 1;
+}
+
+
+#trump-display {
+  vertical-align: top;
+  display: inline-block;
+  background: rgb(110, 70, 70);
+  width: 20%;
+  height: 10%;
+  margin-left: 10%
+}
+
+
 .img-card {
   height: 100%;
   width: 100%;
 }
 
 .player-card:hover{
-  background: rgb(208, 63, 68);
+  background: rgb(237, 223, 223);
 }
 
 
@@ -75,14 +128,12 @@ body {
 .local-player-holder{
   text-align: center;
   margin: 0 15%;
-  background: antiquewhite;
   width: 70%;
   height: 40%;
 }
 
 .player-loc-1{
   margin-left: 10%;
-  margin-right: 20%;
   width: 40%;
 }
 
@@ -98,12 +149,12 @@ body {
 
 #player-1, #player-3 {
   background: rgb(58, 53, 53);
-  color: white;
+  color: rgb(237, 223, 223);
 }
 
 #player-2, #player-4 {
   background: rgb(208, 63, 68);
-  color: white;
+  color: rgb(237, 223, 223);
 }
 
 .player-name{
@@ -119,15 +170,6 @@ body {
 .game-table{
   background: rgb(110, 70, 70);
   height: 40%;
-}
-
-.message-user{
-  width: 40%;
-  visibility: visible;
-  position: absolute;
-  left: 30%;
-  top: 10%;
-  background-color: aquamarine;
 }
 
 .table-card-1{

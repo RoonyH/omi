@@ -25,6 +25,8 @@ io.on('connection', function (socket) {
 
   socket.on('start', function (data) {
 
+    console.log('start ' + JSON.stringify(data))
+
     var opt = {
       gameId: data.gameId,
       playerId: data.playerId,

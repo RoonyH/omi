@@ -13,12 +13,13 @@ require(['jquery', 'models/game'], function($, game){
     socket = io.connect(protocol + '//' + host);
 
     socket.on('game', function (data) {
+
       console.log(data)
       g = new game.Game();
       p = g.createPlayer({
         id: omiGameConf.playerId,
-        name:'Player ' + omiGameConf.playerId,
-        trumpher: (data.trumpher == omiGameConf.playerId)
+        name:'You',
+        trumpher: (data.trumpher == omiGameConf.playerId)&&(data.status==2)
       });
       t = g.createTable({id: 1});
       data.hand.forEach(function(card){
@@ -57,6 +58,7 @@ require(['jquery', 'models/game'], function($, game){
       $("#black-round-wins").html(data.score.roundTeamA)
 
       socket.on('new-round', function(data){
+
         p.set('trumpher', data.trumpher == omiGameConf.playerId);
 
         data.hand.forEach(function(card){
@@ -92,9 +94,9 @@ require(['jquery', 'models/game'], function($, game){
         if(data.winner){
           g.set('winner', data.winner)
           setTimeout(function(){
-            $('#message').html(data.winner.name + ' Won that hand!');
+            $('#message').html("<p>"+data.winner.name + ' Won that hand!'+"</p>");
             $('#message').css('visibility', 'visible');
-            setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
+            setTimeout(function(){$('#message').css('visibility', 'hidden')}, 4000)
             t.clear();
             if(!p.get('cards').length){ // if all cards are over
               socket.emit('round', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
@@ -153,7 +155,18 @@ require(['jquery', 'models/game'], function($, game){
         name: "Player " + omiGameConf.playerId
       }
 
-      socket.emit('start', details);
+      if(typeof FB != 'undefined'){
+        connectFB(function(user){
+
+          details.name = user.first_name;
+          details.picUrl = user.picture.data.url;
+          console.log(details)
+          console.log(user)
+          socket.emit('start', details);
+        })
+      } else {
+        socket.emit('start', details);
+      }
     });
   });
 });

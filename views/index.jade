@@ -1,9 +1,19 @@
 html
   head
+    link(href='//fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css')
     link(rel='stylesheet', href='stylesheets/thirdparty/bootstrap.min.css')
     link(rel='stylesheet', href='stylesheets/style.css')
   body
-    ="Create a game or join one of following games"
-    form(action="/")
-      input(type="hidden" name="gameId" value="new")
-      input(type="submit" value="Create a game")
+    .half
+      .cont-create
+        p Create a game. You get to pick trumphs first! You can share the link you get to your game to make finding players quicker.
+        form(action="/")
+          input(type="hidden" name="gameId" value="new")
+          input(type="submit" value="Create")
+
+    .half
+      .cont-join
+        p Join a game. You can share the link you get to your game to make finding rest of the players quicker.
+        form(action="/")
+          input(type="hidden" name="gameId" value="join")
+          input(type="submit" value="Join")

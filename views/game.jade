@@ -19,21 +19,24 @@ html
                 ="0"
               td(id='black-hand-wins')
                 ="0"
-            td
+            td    
         div(id='player-'+((playerId+1)%4+1) class="player-loc-1 player-holder text-center")
-          player 1 goes here
+          ="Waiting for a player.."
+        #trump-display
+          label(id="tumphs-label")
+            ="Trumps: "
 
         div(id='player-'+((playerId+2)%4+1) class="player-loc-2 player-holder text-center")
-          player 2 goes here
+          ="Waiting for a player.."
 
         div#table-1.table
 
         div(id='player-'+((playerId)%4+1) class="player-loc-3 player-holder text-center")
-          player 4 goes here
+          ="Waiting for a player.."
 
       .row
         div(id='player-'+playerId class="player-loc-4 local-player-holder text-center")
-          player 3 goes here
+          ="Waiting for a player.."
 
     include game.html
 
@@ -43,6 +46,8 @@ html
         div(id='t-card-'+((playerId+1)%4+1) class="card table-card-2")
         div(id='t-card-'+playerId class="card table-card-3")
         div(id='t-card-'+((playerId)%4+1) class="card table-card-4")
+      div(id="message" class="message-user")
+        <p>Thanks for playing :)</p>
       include trumphs.html
 
     script.
