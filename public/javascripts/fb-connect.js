@@ -1,5 +1,4 @@
 function connectFB(callback){
-  console.log('ane')
 
   FB.init({
     appId: "1591263741108585",
@@ -15,7 +14,6 @@ function connectFB(callback){
     FB.login(callback);
   }
   function loginCallback(response) {
-    console.log('loginCallback',response);
     if(response.status != 'connected') {
       top.location.href = 'https://www.facebook.com/appcenter/YOUR_APP_NAMESPACE';
     }
@@ -34,6 +32,5 @@ function connectFB(callback){
     }
   }
   function onAuthResponseChange(response) {
-    console.log('onAuthResponseChange', response);
   }
 }

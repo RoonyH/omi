@@ -5,7 +5,7 @@ define(["backbone"], function(Backbone) {
         name: 'unknown',
         value: 0,
         kind: null,
-        clickHandler: function(){console.log("clicked: "+this.kind+" "+this.value)}
+        clickHandler: function(){console.log("clicked: "+this.kind+" "+this.value);}
       };
     },
 

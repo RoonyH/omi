@@ -12,8 +12,6 @@ define(["backbone", "collections/cards"],
 
     placeCard: function(card, pid) {
       this.get('cards').add(card);
-      console.log('card: ' + card.get('kind') + card.get('value') +
-                  ' placed on the table: ' + this.get('id'));
       this.trigger('card-placed', {card: card, pid: pid});
     },
     

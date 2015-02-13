@@ -19,7 +19,7 @@ html
                 ="0"
               td(id='black-hand-wins')
                 ="0"
-            td    
+
         div(id='player-'+((playerId+1)%4+1) class="player-loc-1 player-holder text-center")
           ="Waiting for a player.."
         #trump-display
@@ -29,8 +29,13 @@ html
         div(id='player-'+((playerId+2)%4+1) class="player-loc-2 player-holder text-center")
           ="Waiting for a player.."
 
-        div#table-1.table
-
+        div(class='table')
+          #tableoo
+          div(id="message" class="message-user")
+            h1(id='#title')
+              ="Thanks for checking out :)"
+            p(id="description")
+              =""
         div(id='player-'+((playerId)%4+1) class="player-loc-3 player-holder text-center")
           ="Waiting for a player.."
 
@@ -46,8 +51,6 @@ html
         div(id='t-card-'+((playerId+1)%4+1) class="card table-card-2")
         div(id='t-card-'+playerId class="card table-card-3")
         div(id='t-card-'+((playerId)%4+1) class="card table-card-4")
-      div(id="message" class="message-user")
-        <p>Thanks for playing :)</p>
       include trumphs.html
 
     script.

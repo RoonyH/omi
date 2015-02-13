@@ -33,7 +33,7 @@ define(['jquery', 'backbone'], function($, Backbone){
     },
 
     removedCard: function(){
-      console.log(this.cid)
+      console.log(this.cid);
       this.remove();
       console.log('removed view');
     },

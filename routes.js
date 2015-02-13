@@ -7,10 +7,10 @@ exports.index = function(req, res){
   var query = url_parts.query;
 
   if(req.cookies.sec){
-    console.log("---------> " + req.cookies.sec + "<--------")
+    console.log('------>Index: Sec:" + req.cookies.sec + "<------');
     gameModule.getGameBySec(req.cookies.sec, function(err, game){
       console.log(game)
-      if(err){
+      if(err=='no-such-game'){
         res.clearCookie('sec')
         handleQuery();
       } else {
@@ -64,7 +64,7 @@ exports.index = function(req, res){
 
 
 exports.game = function(opt, callback){
-  console.log('finding game' + JSON.stringify(opt))
+  console.log('game: Finding game ' + JSON.stringify(opt))
 
   var gameId = opt.gameId;
   var playerId = opt.playerId;
@@ -73,12 +73,12 @@ exports.game = function(opt, callback){
     playerId: opt.playerId,
     socketId: opt.socketId,
     name: opt.name
-  }
+  };
 
   gameModule.getStatus(gameId, function(status){
 
     if(!status){
-      console.log("Not!")
+      console.log('game: Game not active!');
       return;
     }
 
@@ -91,30 +91,30 @@ exports.game = function(opt, callback){
         gameModule.getPlayers(gameId, function(err, players){
           gameModule.getTurn(gameId, function(turn){
             gameModule.getScore(gameId, function(score){
-            gameModule.getTrumpher(gameId, function(trumpher){
-              console.log("---" + trumpher)
-              gameModule.addPlayer(gameId, playerId, player, function(){
-                var details = {
-                  hand: hand,
-                  table: table,
-                  players: players,
-                  trumpher: trumpher,
-                  status: status,
-                  turn: turn,
-                  score: score
-                }
+              gameModule.getTrumpher(gameId, function(trumpher){
+                gameModule.addPlayer(gameId, playerId, player, function(){
 
-                if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
-                  gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
-                    details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
+                  var details = {
+                    hand: hand,
+                    table: table,
+                    players: players,
+                    trumpher: trumpher,
+                    status: status,
+                    turn: turn,
+                    score: score
+                  };
 
-                    callback(details)
-                  })
-                } else {
-                  callback(details)
-                }
+                  if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
+                    gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
+                      details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
+
+                      callback(details);
+                    });
+                  } else {
+                    callback(details);
+                  }
+                });
               });
-            });
             });
           });
         });
@@ -129,13 +129,13 @@ exports.round = function(opt, callback){
   var playerId = opt.playerId;
   gameModule.getStatus(gameId, function(status){
     if(status!=gameModule.gameStatus.WAITING_TRUMPS_PICK){
-      console.log("Previous round still on")
-      callback("Previous round still on");
+      console.log('round: Previous round still on');
+      callback('previous-round-on');
       return;
     } else {
       gameModule.newRound(gameId, playerId, function(err, round){
-        callback(null, round)
-      })
+        callback(null, round);
+      });
     }
   });
 }
@@ -143,13 +143,24 @@ exports.round = function(opt, callback){
 
 exports.trumpsPicked = function(data, callback){
   gameModule.getTrumpher(data.gameId, function(t){
-    if(t == data.playerId){
+    if(t != data.playerId){
+      console.log('trumphsPicked: not the right user!');
+      callback('not-trumpher', null);
+    }
 
-      trumphKind = {
-        Clubs: "c",
-        Hearts: "h",
-        Spades: "s",
-        Diamonds: "d"
+    trumphKind = {
+      Clubs: "c",
+      Hearts: "h",
+      Spades: "s",
+      Diamonds: "d"
+    }
+
+    gameModule.getStatus(data.gameId, function(status){
+
+      if(status!=gameModule.gameStatus.WAITING_TRUMPS_PICK){
+        console.log('trumphsPicked: not the right time!');
+        callback('wrong-status');
+        return;
       }
 
       gameModule.setTrumphs(data.gameId, trumphKind[data.trumphs], function(){
@@ -159,9 +170,7 @@ exports.trumpsPicked = function(data, callback){
           });
         });
       });
-    } else {
-      callback("You are not the player to pick trumphs", null);
-    }
+    });
   });
 }
 
@@ -171,7 +180,8 @@ exports.cardPlayed = function(data, callback){
   var playerId = data.playerId;
   var card = data.card;
 
-  console.log("gameId: "+gameId+" playerId: "+playerId+" card: "+JSON.stringify(card));
+  console.log("CardPlayed: gameId: "+gameId+" playerId: "+playerId+
+              " card: "+JSON.stringify(card));
 
   function findCard(card, hand){
     var index = -1;
@@ -198,14 +208,14 @@ exports.cardPlayed = function(data, callback){
   gameModule.getStatus(gameId, function(status){
 
     if(status!=gameModule.gameStatus.WAITING_CARD_PLAY){
-      callback("Not started yet");
+      callback("not_started");
       return;
     }
 
   gameModule.getTurn(gameId, function(turn){
 
     if(playerId!=turn){
-      callback("Not your turn");
+      callback('not_turn');
       return;
     }
 
@@ -214,10 +224,10 @@ exports.cardPlayed = function(data, callback){
   
     var index = findCard(card, hand);
 
-    console.log("Card Index: "+index);
+    console.log('CardPlayed: Card Index in hand: '+index);
 
     if(index===-1){
-      callback("You don't have that card");
+      callback('dont-have-card');
       return;
     }
 
@@ -239,10 +249,10 @@ exports.cardPlayed = function(data, callback){
 
           var kindIndex = findCardKind(kind, hand);
           
-          console.log("found kind index" + kindIndex)
+          console.log("CardPlayed: found kind index" + kindIndex)
           
           if(kindIndex!=-1){
-            callback("Can't play that card. play a fking " + kind)
+            callback("cant_play_kind_" + kind)
             return
           }
 
@@ -257,10 +267,11 @@ exports.cardPlayed = function(data, callback){
   
   function handleCardPlay(gameId, playerId, card, hand, index, turn, callback){
     hand.splice(index, 1);
+
     gameModule.setHand(gameId, playerId, hand, function(){
-      gameModule.setTurn(gameId, (turn%4)+1, function(){
-        card.pid = playerId;
-        gameModule.addToTable(gameId, card, function(game){
+      card.pid = playerId;
+      gameModule.addToTable(gameId, card, function(game){
+        gameModule.setTurn(gameId, (turn%4)+1, function(){
           gameModule.getGame(gameId, function(game){
             checkWinner(gameId, function(winner){
               if(winner){
@@ -268,9 +279,11 @@ exports.cardPlayed = function(data, callback){
                   gameModule.getScore(gameId, function(score){
                     game.score = score;
                     if(!hand.length){
-                      gameModule.registerRound(gameId, function(){
-                        callback(null, game, winner);
-                      })
+                      gameModule.clearRound(gameId, function(status){
+                        gameModule.registerRound(gameId, function(){
+                          callback(null, game, winner, status);
+                        });
+                      });
                     } else {
                       callback(null, game, winner);
                     }

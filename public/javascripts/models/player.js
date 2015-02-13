@@ -11,8 +11,6 @@ define(["backbone", "views/player", "collections/cards"],
 
     giveCard: function(card) {
       this.get('cards').add(card);
-      console.log('card: ' + card.get('kind') + card.get('value') +
-                  ' given to the player: ' + this.get('id'));
     },
 
     takeCard: function(card){

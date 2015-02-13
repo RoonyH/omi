@@ -20,6 +20,12 @@ app.post('/', routes.index);
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 
+var messages = {
+  not_started: "The game is not started yet!",
+  not_turn: "It's not your turn!"
+}
+
+
 io.on('connection', function (socket) {
   console.log('------------------>  connected!  <---------------------');
 
@@ -73,7 +79,7 @@ io.on('connection', function (socket) {
       game.players.forEach(function(player){
         details = {
           trumphs: data.trumphs,
-          hand: game.getPlayerSecondHand(player.id)
+          hand: game.hands[player.id-1].slice(4, 8)
         };
 
         io.to(player.socketId).emit('trumps-and-next-hand', details);
@@ -86,12 +92,13 @@ io.on('connection', function (socket) {
     console.log('card-played')
     console.log(data);
 
-    routes.cardPlayed(data, function(err, game, winner){
+    routes.cardPlayed(data, function(err, game, winner, end){
       if(err){
         socket.emit("cant-play-card", {msg: err, card: data.card});
         return;
       }
      
+
       
       game.players.forEach(function(player){
         details = {
@@ -103,6 +110,12 @@ io.on('connection', function (socket) {
         if(winner){
           details.winner = winner
         }
+
+        if(end){
+          details.end = end;
+        }
+
+        console.log('cardPlayed: ' + JSON.stringify(game.players));
 
         io.to(player.socketId).emit('played-card', details);
       });

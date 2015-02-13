@@ -2,11 +2,13 @@ var redis = require('redis');
 var crypto = require('crypto');
 var underscore = require('underscore');
 
-var redisPort = process.env.REDIS_PORT;
-var redisHost = process.env.REDIS_HOST;
-var redisPass = process.env.REDIS_PASS;
+var redisPort = process.env.REDIS_PORT||'6379';
+var redisHost = process.env.REDIS_HOST||'localhost';
+var redisPass = process.env.REDIS_PASS||'pass';
 
 var client = redis.createClient(redisPort, redisHost);
+
+var ROUNDS_PER_MATCH = 2;
 
 client.auth(redisPass, function(){
   console.log("Connected to "+redisHost+":"+redisPort);
@@ -40,18 +42,18 @@ function registerPlayer(gameId, callback){
   client.incr('g'+gameId+'pc', function(err, id){
 
     if(id>4){
-      //Game is full
-      callback('Game is full', null, null)
+      // Game is full.
+      callback('game-full', null, null)
       return;
     }
 
     if(id==4){
       client.lrem('opengames', gameId, 1, function(){
-
+        // Game is no longer open for player connections.
       })
     }
 
-    sec = random();
+    sec = random(); // An identifier for the player. It should be a 'sec'ret.
     client.set('g'+gameId+'p'+id+'sec', sec, function(err){
       client.set(sec, JSON.stringify({gameId: gameId, playerId:id}), function(err){
         callback(null, id, sec);
@@ -69,24 +71,36 @@ function registerRound(gameId, callback){
   var getSecondHand = function(deck, playerId){
     return deck.slice(16 + (playerId-1)*4, 16 + (playerId-1)*4+4);
   }
+
+  client.hincrby('g'+gameId, 'round', 1, function(err, round){
+    createDeck(gameId, round, function(deck){
+      client.hmset('g'+gameId,
+        'status', gameStatus.WAITING_TRUMPS_PICK,
+        'p1hand', JSON.stringify(getFirstHand(deck, 1).concat(getSecondHand(deck, 1))),
+        'p2hand', JSON.stringify(getFirstHand(deck, 2).concat(getSecondHand(deck, 2))),
+        'p3hand', JSON.stringify(getFirstHand(deck, 3).concat(getSecondHand(deck, 3))),
+        'p4hand', JSON.stringify(getFirstHand(deck, 4).concat(getSecondHand(deck, 4))),
+        'p1wins', 0,
+        'p2wins', 0,
+        'p3wins', 0,
+        'p4wins', 0,
+        'turn', (round-1)%4+1,
+        'trumpher', (round-1)%4+1,
+        callback
+      );
+    });
+  });
+}
+
+
+function clearRound(gameId, callback){
   setRoundWins(gameId, function(){
-    createDeck(gameId, 1, function(deck){
-      client.hincrby('g'+gameId, 'round', 1, function(err, round){
-        client.hmset('g'+gameId,
-          'status', gameStatus.WAITING_TRUMPS_PICK,
-          'p1hand', JSON.stringify(getFirstHand(deck, 1).concat(getSecondHand(deck, 1))),
-          'p2hand', JSON.stringify(getFirstHand(deck, 2).concat(getSecondHand(deck, 2))),
-          'p3hand', JSON.stringify(getFirstHand(deck, 3).concat(getSecondHand(deck, 3))),
-          'p4hand', JSON.stringify(getFirstHand(deck, 4).concat(getSecondHand(deck, 4))),
-          'p1wins', 0,
-          'p2wins', 0,
-          'p3wins', 0,
-          'p4wins', 0,
-          'turn', (round-1)%4+1,
-          'trumpher', (round-1)%4+1,
-          callback
-        )
-      });
+    client.hget('g'+gameId, 'round', function(err, round){
+      if(round>=ROUNDS_PER_MATCH){
+        callback('game-over');
+      } else {
+        callback('round-over');
+      }
     });
   });
 }
@@ -94,7 +108,7 @@ function registerRound(gameId, callback){
 
 function getOpenGame(callback){
   client.lrange('opengames', 0, 0, function(err, games){
-    console.log(games[0] + " --------------------------kkkk")
+    console.log('getOpenGame: Oldest open game is ' + games[0])
 
     if(games){
       callback(games[0]);
@@ -114,7 +128,7 @@ function setRoundWins(id, callback){
         teamB: parseInt(res[1]) + parseInt(res[3])
       }
 
-      var wonteam = "draw"
+      var wonteam = 'draw'
 
       if(score.teamB > score.teamA){
         wonteam = 'teamBwins'
@@ -147,7 +161,7 @@ function setStatus(gameId, status, callback){
 function getStatus(gameId, callback){
   client.hget('g' + gameId, 'status', function(err, status){
     if(!status)
-      status="0"
+      status='0'
     callback(parseInt(status));
   });
 }
@@ -166,18 +180,17 @@ function validateUser(gameId, playerId, entered_sec, callback){
 function getGame(id, callback){
   console.log('looking for game: ' + id);
 
-  getDeck(id, function(err, deck){
-    if(err)
-      throw err;
-  
-    getPlayers(id, function(err, players){
-      if(err)
-        throw err;    
+  var game = {};
 
-      var game = new Game(id, deck, null, players);
-      callback(game);
-    });
-  });
+  client.hmget('g'+id, 'p1hand', 'p2hand', 'p3hand', 'p4hand',
+    function(err, hands){
+      game.hands = underscore.map(hands, JSON.parse);;
+      getPlayers(id, function(err, players){
+        game.players = players;
+        callback(game);
+      });
+    }
+  );
 }
 
 function getScore(id, callback){
@@ -399,7 +412,7 @@ function getTurn(gameId, callback){
 
 
 function addToTable(gameId, card, callback){
-  client.lpush('g'+gameId+'table', JSON.stringify(card), function(){
+  client.rpush('g'+gameId+'table', JSON.stringify(card), function(){
     callback(card);
     return;
   });
@@ -468,9 +481,10 @@ function getGameBySec(sec, callback){
     if(game)
       callback(null, JSON.parse(game));
     else
-      callback("No such game", null);
+      callback("no-such-game", null);
   });
 }
+
 
 function Game(id, deck, table, players){
   this.id = id;
@@ -568,3 +582,4 @@ exports.createDeck = createDeck;
 exports.getTrumpher = getTrumpher;
 exports.getScore = getScore;
 exports.getOpenGame = getOpenGame;
+exports.clearRound = clearRound;

@@ -8,13 +8,26 @@ requirejs.config({
 
 require(['jquery', 'models/game'], function($, game){
   $(function(){
+    var messages = {
+      cant_play_kind_s: "You can't play that card there. Play a Spade which " +
+        "match the first played card on the table." ,
+      cant_play_kind_c: "You can't play that card there.. Play a Club which " +
+        "match the first played card on the table." ,
+      cant_play_kind_h: "You can't play that card there. Play a Heart which " +
+        "match the first played card on the table." ,
+      cant_play_kind_d: "You can't play that card there. Play a Diamond which " +
+        "match the first played card on the table.",
+      not_started: "You can't play a card until trumphs are picked.",
+      not_turn: "It's not your turn! Please wait till you get your turn :)"
+    }
+
     var host = window.location.hostname;
     var protocol = window.location.protocol;
     socket = io.connect(protocol + '//' + host);
 
     socket.on('game', function (data) {
 
-      console.log(data)
+      console.log(data);
       g = new game.Game();
       p = g.createPlayer({
         id: omiGameConf.playerId,
@@ -43,7 +56,7 @@ require(['jquery', 'models/game'], function($, game){
       }
 
       data.players.forEach(function(player){
-        console.log(player)
+        console.log(player);
         if(player.id != omiGameConf.playerId)
           var p = g.createPlayer(player);
       });
@@ -94,11 +107,25 @@ require(['jquery', 'models/game'], function($, game){
         if(data.winner){
           g.set('winner', data.winner)
           setTimeout(function(){
-            $('#message').html("<p>"+data.winner.name + ' Won that hand!'+"</p>");
-            $('#message').css('visibility', 'visible');
-            setTimeout(function(){$('#message').css('visibility', 'hidden')}, 4000)
+            $('#message > h1').html(data.winner.name + ' Won that hand!');
+            $('#message > p').html("");
+            $('#message').css('display', 'block');
+
+            setTimeout(function(){
+              $('#message').fadeOut();
+
+              if(data.end==='game-over'){
+                $('#message > h1').html('Game Over!');
+                $('#message > p').html('Thank you very much for heading this way! '+
+                  'Send your thoughts to amazingfun2012@gmail.com');
+                $('#message').css('display', 'block')
+              }
+
+            }, 3000);
+
             t.clear();
-            if(!p.get('cards').length){ // if all cards are over
+
+            if(data.end==='round-over'){ // if all cards are over
               socket.emit('round', {gameId: omiGameConf.gameId, playerId: omiGameConf.playerId})
             }
           }, 2000)
@@ -107,6 +134,16 @@ require(['jquery', 'models/game'], function($, game){
           $("#black-hand-wins").html(data.score.teamA)
           $("#red-round-wins").html(data.score.roundTeamB)
           $("#black-round-wins").html(data.score.roundTeamA)
+        } else {
+          if((data.player)%4+1 == omiGameConf.playerId){
+            $('#message > h1').html("It's your turn!");
+            $('#message > p').html("");
+            $('#message').css('display', 'block');
+
+            setTimeout(function(){
+              $('#message').fadeOut();
+            }, 2000);
+          }
         }
       });
 
@@ -128,13 +165,14 @@ require(['jquery', 'models/game'], function($, game){
 
       socket.on('cant-play-card', function(data){
         console.log(data);
-        $('#message').html(data.msg);
-        $('#message').css('visibility', 'visible');
-        setTimeout(function(){$('#message').css('visibility', 'hidden')}, 2000)
+        $('#message > h1').html("Can't play card!");
+        $('#message > p').html(messages[data.msg]);
+        $('#message').css('display', 'block');
+        setTimeout(function(){$('#message').fadeOut()}, 3000)
 
         var c = g.createCard(data.card);
         c.set('clickHandler', function(){
-          p.takeCard(c);      
+          p.takeCard(c);
           socket.emit('card-played', data = {
             gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
             card: c
@@ -156,14 +194,19 @@ require(['jquery', 'models/game'], function($, game){
       }
 
       if(typeof FB != 'undefined'){
-        connectFB(function(user){
+        if(omiGameConf.fbConnected){
+          socket.emit('start', details) //if socket disconnected after fb connect
+        } else {
+          connectFB(function(user){
 
-          details.name = user.first_name;
-          details.picUrl = user.picture.data.url;
-          console.log(details)
-          console.log(user)
-          socket.emit('start', details);
-        })
+            details.name = user.first_name;
+            details.picUrl = user.picture.data.url;
+            console.log(details);
+            console.log(user);
+            omiGameConf.fbConnected = true;
+            socket.emit('start', details);
+          })
+        }
       } else {
         socket.emit('start', details);
       }

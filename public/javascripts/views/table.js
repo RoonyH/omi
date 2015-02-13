@@ -2,7 +2,7 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
   var TableView = Backbone.View.extend({
 
     el: function(){
-      return $('#table-' + this.model.id);
+      return $('#tableoo');
     },
 
     template: $('#template-table').html(),
@@ -39,7 +39,7 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
     },
 
     placedCard: function(data){
-      console.log(data.pid)
+      console.log(data.pid);
       var cv = new cardView.CardView({model: data.card, el: '#t-card-'+data.pid});
       this.$('#cards').append(cv.render());
       this.cards.push({id: data.pid, cardView: cv})
@@ -49,7 +49,7 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
       var that = this;
       var winnerId = g.get('winner').playerId
       this.cards.forEach(function(c, i){
-        console.log(c, i)
+        console.log(c, i);
         var a = c.cardView.$el.offset();
         var b = $('#player-'+winnerId).offset();
         var top = (b.top-a.top);
