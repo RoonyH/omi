@@ -7,14 +7,16 @@ html
           table
             tr
               td(id='red-team-name')
-                ="Red"
+                .container
+                  ="Red"
               td(id='red-round-wins')
                 ="0"
               td(id='red-hand-wins')
                 ="0"
             tr
               td(id='black-team-name')
-                ="Black"
+                .container
+                  ="Black"
               td(id='black-round-wins')
                 ="0"
               td(id='black-hand-wins')
@@ -23,8 +25,8 @@ html
         div(id='player-'+((playerId+1)%4+1) class="player-loc-1 player-holder text-center")
           ="Waiting for a player.."
         #trump-display
-          label(id="tumphs-label")
-            ="Trumps: "
+          div(class="trumps-dis")
+
 
         div(id='player-'+((playerId+2)%4+1) class="player-loc-2 player-holder text-center")
           ="Waiting for a player.."

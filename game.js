@@ -377,8 +377,10 @@ function getTrumphs(id, callback){
       throw err;
     if(trumphs)
       callback(trumphs);
-    else
-      throw "No trumps set";
+    else{
+      console.log("No trumps set");
+      callback(null);
+    }
   });
 }
 

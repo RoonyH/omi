@@ -11,6 +11,7 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
       this.listenTo(this.model, 'card-placed', this.placedCard);
       this.listenTo(this.model.get('cards'), 'reset', this.clear);
       this.cards = [];
+      testcards = this.cards;
     },
 
     render: function(){
@@ -40,15 +41,19 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
 
     placedCard: function(data){
       console.log(data.pid);
-      var cv = new cardView.CardView({model: data.card, el: '#t-card-'+data.pid});
+      var diff = p.get('id') - data.pid;
+      var cv = new cardView.CardView({model: data.card});
+      cv.$el.addClass('tc'+diff);
       this.$('#cards').append(cv.render());
-      this.cards.push({id: data.pid, cardView: cv})
+      this.cards.push({id: data.pid, cardView: cv, test: data.card.get('kind')+data.card.get('value')})
+      
     },
     
     clear: function(data){
       var that = this;
       var winnerId = g.get('winner').playerId
-      this.cards.forEach(function(c, i){
+      this.cards.slice(0, 4).forEach(function(c, i){
+        that.cards.splice(that.cards.indexOf(c), 1);
         console.log(c, i);
         var a = c.cardView.$el.offset();
         var b = $('#player-'+winnerId).offset();
@@ -68,8 +73,8 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
           function(){
             c.cardView.remove();
             if(i==3){
-              that.render();
-              that.cards = [];
+              //that.render();
+              //that.cards = [];
             }
           }
         );

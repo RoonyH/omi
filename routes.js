@@ -92,6 +92,7 @@ exports.game = function(opt, callback){
           gameModule.getTurn(gameId, function(turn){
             gameModule.getScore(gameId, function(score){
               gameModule.getTrumpher(gameId, function(trumpher){
+              gameModule.getTrumphs(gameId, function(trumphs){
                 gameModule.addPlayer(gameId, playerId, player, function(){
 
                   var details = {
@@ -99,6 +100,7 @@ exports.game = function(opt, callback){
                     table: table,
                     players: players,
                     trumpher: trumpher,
+                    trumphs: trumphs,
                     status: status,
                     turn: turn,
                     score: score
@@ -114,6 +116,7 @@ exports.game = function(opt, callback){
                     callback(details);
                   }
                 });
+              });
               });
             });
           });

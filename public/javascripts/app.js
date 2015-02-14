@@ -70,6 +70,8 @@ require(['jquery', 'models/game'], function($, game){
       $("#red-round-wins").html(data.score.roundTeamB)
       $("#black-round-wins").html(data.score.roundTeamA)
 
+      $('#trump-display > .trumps-dis').addClass('trumps-dis-' + data.trumphs)
+
       socket.on('new-round', function(data){
 
         p.set('trumpher', data.trumpher == omiGameConf.playerId);
@@ -106,8 +108,12 @@ require(['jquery', 'models/game'], function($, game){
         t.placeCard(g.createCard(data.card), data.player)
         if(data.winner){
           g.set('winner', data.winner)
+          var message = data.winner.name + ' Won that hand!';
+          if(data.winner.playerId==omiGameConf.playerId){
+            message = 'You Won! And its your turn.';
+          }
           setTimeout(function(){
-            $('#message > h1').html(data.winner.name + ' Won that hand!');
+            $('#message > h1').html(message);
             $('#message > p').html("");
             $('#message').css('display', 'block');
 
@@ -149,6 +155,8 @@ require(['jquery', 'models/game'], function($, game){
 
       socket.on('trumps-and-next-hand', function(data){
         console.log(data);
+        $('#trump-display > .trumps-dis').attr('class', 
+              'trumps-dis ' + 'trumps-dis-' + data.trumphs)
         data.hand.forEach(function(card){
           var c = g.createCard(card);
           c.set('clickHandler', function(){            
@@ -161,6 +169,14 @@ require(['jquery', 'models/game'], function($, game){
           p.giveCard(c);
         });
         setTimeout(function(){p.sortCards()}, 2000)
+        $('#message > h1').html("Trumphs picked!");
+        $('#message > p').html("Trumphs are displayed in the top right coner.<br>"+
+          "Here we go then.. Let the omi begin!");
+        $('#message').css('display', 'block');
+
+        setTimeout(function(){
+          $('#message').fadeOut();
+        }, 4000);
       });
 
       socket.on('cant-play-card', function(data){

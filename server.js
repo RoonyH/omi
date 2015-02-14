@@ -56,6 +56,7 @@ io.on('connection', function (socket) {
       gameDetails = {
         hand: game.hand,
         players: game.players,
+        trumphs: game.trumphs,
         trumpher: game.trumpher,
         table: game.table,
         status: game.status,
@@ -141,6 +142,26 @@ io.on('connection', function (socket) {
 
       socket.emit('new-round', gameDetails);
     })
+  })
+
+  socket.on('disconnect', function(){
+
+    // var opt = {
+    //   gameId: data.gameId,
+    //   playerId: data.playerId
+    // }
+
+    // routes.round(opt, function(err, game){
+    //   gameDetails = {
+    //     hand: game.hand,
+    //     trumpher: game.trumpher,
+    //     players: [],
+    //     table: [],
+    //     status: 2 // WAITING_TRUMPHS_PICK
+    //   }
+
+    //   socket.emit('new-round', gameDetails);
+    // })
   })
 });
 

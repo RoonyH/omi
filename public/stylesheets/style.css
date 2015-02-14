@@ -7,6 +7,16 @@ h1 {
   font: bold 30px/40px Courgette, cursive, sans-serif;
 }
 
+h2 {
+  font: bold 20px/30px Courgette, cursive, sans-serif;
+}
+
+.container {
+  padding: 5%;
+  vertical-align: middle;
+  display: inline;
+}
+
 .half {
   font: bold 200% Courgette, cursive, sans-serif;
   display: inline-block;
@@ -97,9 +107,53 @@ h1 {
   vertical-align: top;
   display: inline-block;
   background: rgb(110, 70, 70);
-  width: 20%;
-  height: 10%;
-  margin-left: 10%
+  margin-left:20%;
+}
+
+.trumps-dis {
+  display: inline-block;
+  margin: 5px;
+  background-color: rgb(237, 223, 223);
+  border-color: black;
+  border-width: 2px;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font: bold 15px/20px Courgette, cursive, sans-serif
+}
+
+.trumps-dis:before {
+  margin-right: 0px;
+  float: left;
+  content: "";
+  background-repeat: no-repeat;
+  background-size: 40px 40px;
+  width: 20px;
+  height: 20px;
+}
+
+
+.trumps-dis-d:before ,
+.trumps-dis-diamonds:before {
+  background-position: 0 -20px;
+  background-image: url(/images/kinds.png);
+}
+
+.trumps-dis-s:before ,
+.trumps-dis-spades:before {
+  background-position: 0 0px;
+  background-image: url(/images/kinds.png);
+}
+
+.trumps-dis-c:before ,
+.trumps-dis-clubs:before {
+  background-position: -20px -20px ;
+  background-image: url(/images/kinds.png);
+}
+
+.trumps-dis-h:before ,
+.trumps-dis-hearts:before {
+  background-position: -20px 0;
+  background-image: url(/images/kinds.png);
 }
 
 
@@ -176,25 +230,29 @@ h1 {
   height: 40%;
 }
 
-.table-card-1{
+.table-card-1,
+.tc-3, .tc1{
   position: absolute;
   top: 30%;
   left: 34.375%;
 }
 
-.table-card-2{
+.table-card-2,
+.tc-2, .tc2{
   position: absolute;
   top: 0%;
   left: 41.625%;
 }
 
-.table-card-3{
+.table-card-3,
+.tc0{
   position: absolute;
   top: 50%;
   left: 46.875%;
 }
 
-.table-card-4{
+.table-card-4,
+.tc-1, .tc3{
   position: absolute;
   top: 20%;
   left: 50%;
