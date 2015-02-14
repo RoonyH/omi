@@ -25,7 +25,6 @@ define(['jquery', 'backbone', 'views/card'], function($, Backbone, cardView){
         p.set('trumpher', false)
 
         socket.emit('trumphs-picked', data = {
-          gameId: omiGameConf.gameId, playerId: omiGameConf.playerId,
           trumphs: $($(this).children()[0]).html()
         })
         

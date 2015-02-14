@@ -66,57 +66,67 @@ exports.index = function(req, res){
 exports.game = function(opt, callback){
   console.log('game: Finding game ' + JSON.stringify(opt))
 
-  var gameId = opt.gameId;
-  var playerId = opt.playerId;
+  gameModule.getGameBySec(opt.sec, function(err, game){
 
-  var player = {
-    playerId: opt.playerId,
-    socketId: opt.socketId,
-    name: opt.name
-  };
-
-  gameModule.getStatus(gameId, function(status){
-
-    if(!status){
-      console.log('game: Game not active!');
+    if(err){
+      console.log(err);
       return;
     }
 
-    gameModule.getHand(gameId, playerId, function(hand){
+    var gameId = game.gameId;
+    var playerId = game.playerId;
 
-      if(status!=gameModule.gameStatus.WAITING_CARD_PLAY)
-        hand = hand.slice(0, 4);
+    var player = {
+      playerId: playerId,
+      socketId: opt.socketId,
+      name: opt.name
+    };
 
-      gameModule.getTable(gameId, function(table){
-        gameModule.getPlayers(gameId, function(err, players){
-          gameModule.getTurn(gameId, function(turn){
-            gameModule.getScore(gameId, function(score){
-              gameModule.getTrumpher(gameId, function(trumpher){
-              gameModule.getTrumphs(gameId, function(trumphs){
-                gameModule.addPlayer(gameId, playerId, player, function(){
+    gameModule.getStatus(gameId, function(status){
 
-                  var details = {
-                    hand: hand,
-                    table: table,
-                    players: players,
-                    trumpher: trumpher,
-                    trumphs: trumphs,
-                    status: status,
-                    turn: turn,
-                    score: score
-                  };
+      if(!status){
+        console.log('game: Game not active!');
+        return;
+      }
 
-                  if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
-                    gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
-                      details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
+      gameModule.getHand(gameId, playerId, function(hand){
 
+        if(status!=gameModule.gameStatus.WAITING_CARD_PLAY)
+          hand = hand.slice(0, 4);
+
+        gameModule.getTable(gameId, function(table){
+          gameModule.getPlayers(gameId, function(err, players){
+            gameModule.getTurn(gameId, function(turn){
+              gameModule.getScore(gameId, function(score){
+                gameModule.getTrumpher(gameId, function(trumpher){
+                gameModule.getTrumphs(gameId, function(trumphs){
+                  gameModule.addPlayer(gameId, playerId, player, function(){
+
+                    var details = {
+                      gameId: gameId,
+                      playerId: playerId,
+                      hand: hand,
+                      table: table,
+                      players: players,
+                      trumpher: trumpher,
+                      trumphs: trumphs,
+                      status: status,
+                      turn: turn,
+                      score: score
+                    };
+
+                    if(status==gameModule.gameStatus.WAITING_PLAYER_JOIN && playerId==4){
+                      gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
+                        details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
+
+                        callback(details);
+                      });
+                    } else {
                       callback(details);
-                    });
-                  } else {
-                    callback(details);
-                  }
+                    }
+                  });
                 });
-              });
+                });
               });
             });
           });

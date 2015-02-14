@@ -34,8 +34,7 @@ io.on('connection', function (socket) {
     console.log('start ' + JSON.stringify(data))
 
     var opt = {
-      gameId: data.gameId,
-      playerId: data.playerId,
+      sec: data.sec,
       name: data.name,
       socketId: socket.id
     }
@@ -43,9 +42,126 @@ io.on('connection', function (socket) {
     routes.game(opt, function(game){
       console.log(JSON.stringify(game));
 
+      var globalGameId = game.gameId;
+      var globalPlayerId = game.playerId;
+
+      //Define rest of the events
+
+      socket.on('trumphs-picked', function(data){
+
+        opt = {
+          gameId: globalGameId,
+          playerId: globalPlayerId,
+          trumphs: data.trumphs
+        }
+
+        routes.trumpsPicked(opt, function(err, game){
+          console.log(game)
+
+          if(err){
+            console.log(err)
+            return;
+          }
+
+          game.players.forEach(function(player){
+            details = {
+              trumphs: data.trumphs,
+              hand: game.hands[player.id-1].slice(4, 8)
+            };
+
+            io.to(player.socketId).emit('trumps-and-next-hand', details);
+          });
+        })
+      });
+
+
+      socket.on('card-played', function(data){
+        console.log('card-played')
+        console.log(data);
+
+        opt = {
+          gameId: globalGameId,
+          playerId: globalPlayerId,
+          card: data.card
+        }
+
+
+        routes.cardPlayed(data, function(err, game, winner, end){
+          if(err){
+            socket.emit("cant-play-card", {msg: err, card: data.card});
+            return;
+          }
+         
+
+          
+          game.players.forEach(function(player){
+            details = {
+              player: data.playerId,
+              card: data.card,
+              score: game.score
+            };
+
+            if(winner){
+              details.winner = winner
+            }
+
+            if(end){
+              details.end = end;
+            }
+
+            console.log('cardPlayed: ' + JSON.stringify(game.players));
+
+            io.to(player.socketId).emit('played-card', details);
+          });
+        })
+
+      });
+
+      socket.on('round', function(data){
+
+        var opt = {
+          gameId: data.gameId,
+          playerId: data.playerId
+        }
+
+        routes.round(opt, function(err, game){
+          gameDetails = {
+            hand: game.hand,
+            trumpher: game.trumpher,
+            players: [],
+            table: [],
+            status: 2 // WAITING_TRUMPHS_PICK
+          }
+
+          socket.emit('new-round', gameDetails);
+        })
+      })
+
+      socket.on('disconnect', function(){
+
+        // var opt = {
+        //   gameId: data.gameId,
+        //   playerId: data.playerId
+        // }
+
+        // routes.round(opt, function(err, game){
+        //   gameDetails = {
+        //     hand: game.hand,
+        //     trumpher: game.trumpher,
+        //     players: [],
+        //     table: [],
+        //     status: 2 // WAITING_TRUMPHS_PICK
+        //   }
+
+        //   socket.emit('new-round', gameDetails);
+        // })
+      })
+
+      // End of rest of events
+
       game.players.forEach(function(player){
         var details = {
-          id: data.playerId,
+          id: game.playerId,
           name: data.name,
           status: game.status
         }
@@ -60,109 +176,15 @@ io.on('connection', function (socket) {
         trumpher: game.trumpher,
         table: game.table,
         status: game.status,
-        score: game.score
+        score: game.score,
+        turn: game.turn
       }
 
       socket.emit('game', gameDetails);
     });
-  });
-
-  socket.on('trumphs-picked', function(data){
-
-    routes.trumpsPicked(data, function(err, game){
-      console.log(game)
-
-      if(err){
-        socket.emit("error", {msg: err});
-        return;
-      }
-
-      game.players.forEach(function(player){
-        details = {
-          trumphs: data.trumphs,
-          hand: game.hands[player.id-1].slice(4, 8)
-        };
-
-        io.to(player.socketId).emit('trumps-and-next-hand', details);
-      });
-    })
-  });
-
-
-  socket.on('card-played', function(data){
-    console.log('card-played')
-    console.log(data);
-
-    routes.cardPlayed(data, function(err, game, winner, end){
-      if(err){
-        socket.emit("cant-play-card", {msg: err, card: data.card});
-        return;
-      }
-     
-
-      
-      game.players.forEach(function(player){
-        details = {
-          player: data.playerId,
-          card: data.card,
-          score: game.score
-        };
-
-        if(winner){
-          details.winner = winner
-        }
-
-        if(end){
-          details.end = end;
-        }
-
-        console.log('cardPlayed: ' + JSON.stringify(game.players));
-
-        io.to(player.socketId).emit('played-card', details);
-      });
-    })
 
   });
 
-  socket.on('round', function(data){
-
-    var opt = {
-      gameId: data.gameId,
-      playerId: data.playerId
-    }
-
-    routes.round(opt, function(err, game){
-      gameDetails = {
-        hand: game.hand,
-        trumpher: game.trumpher,
-        players: [],
-        table: [],
-        status: 2 // WAITING_TRUMPHS_PICK
-      }
-
-      socket.emit('new-round', gameDetails);
-    })
-  })
-
-  socket.on('disconnect', function(){
-
-    // var opt = {
-    //   gameId: data.gameId,
-    //   playerId: data.playerId
-    // }
-
-    // routes.round(opt, function(err, game){
-    //   gameDetails = {
-    //     hand: game.hand,
-    //     trumpher: game.trumpher,
-    //     players: [],
-    //     table: [],
-    //     status: 2 // WAITING_TRUMPHS_PICK
-    //   }
-
-    //   socket.emit('new-round', gameDetails);
-    // })
-  })
 });
 
 server.listen(app.get('port'), function(){

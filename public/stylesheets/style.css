@@ -11,6 +11,15 @@ h2 {
   font: bold 20px/30px Courgette, cursive, sans-serif;
 }
 
+.turn-now {
+  border: 5px solid;
+  height: 80%;
+}
+
+.turn-now:before {
+  content: 'Turn: ';
+}
+
 .container {
   padding: 5%;
   vertical-align: middle;

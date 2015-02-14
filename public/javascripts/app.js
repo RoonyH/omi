@@ -65,12 +65,18 @@ require(['jquery', 'models/game'], function($, game){
         $('#trumphs-picker').css('visibility', 'visible')
       }
 
+      // displaye score, could go to backbone view of game.
       $("#red-hand-wins").html(data.score.teamB)
       $("#black-hand-wins").html(data.score.teamA)
       $("#red-round-wins").html(data.score.roundTeamB)
       $("#black-round-wins").html(data.score.roundTeamA)
 
+      // displaye trumphs, could go to backbone view of game.
       $('#trump-display > .trumps-dis').addClass('trumps-dis-' + data.trumphs)
+
+      // displaye turn could go to backbone view of game.
+      $('.turn-now').first().removeClass('turn-now');
+      $('#player-'+data.turn+' > #border').addClass('turn-now');
 
       socket.on('new-round', function(data){
 
@@ -109,8 +115,13 @@ require(['jquery', 'models/game'], function($, game){
         if(data.winner){
           g.set('winner', data.winner)
           var message = data.winner.name + ' Won that hand!';
+
+          $('.turn-now').first().removeClass('turn-now');
+          $('#player-'+data.winner.playerId+' > #border').addClass('turn-now');
+
+
           if(data.winner.playerId==omiGameConf.playerId){
-            message = 'You Won! And its your turn.';
+            message = 'You Won!';
           }
           setTimeout(function(){
             $('#message > h1').html(message);
@@ -141,6 +152,10 @@ require(['jquery', 'models/game'], function($, game){
           $("#red-round-wins").html(data.score.roundTeamB)
           $("#black-round-wins").html(data.score.roundTeamA)
         } else {
+          $('.turn-now').first().removeClass('turn-now');
+          $('#player-'+((data.player)%4+1)+' > #border').addClass('turn-now');
+
+
           if((data.player)%4+1 == omiGameConf.playerId){
             $('#message > h1').html("It's your turn!");
             $('#message > p').html("");
@@ -204,8 +219,7 @@ require(['jquery', 'models/game'], function($, game){
 
     socket.on('connect', function(){
       var details = {
-        gameId: omiGameConf.gameId,
-        playerId: omiGameConf.playerId,
+        sec: getCookieValue('sec'),
         name: "Player " + omiGameConf.playerId
       }
 
