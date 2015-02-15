@@ -6,14 +6,28 @@ html
   body
     .half
       .cont-create
-        p Create a game. You get to pick trumphs first! You can share the link you get to your game to make finding players quicker.
+        h1 Create a game.
+        p You get to pick trumphs first! 
+        br
+        p You can share the link you get to your game to make finding players quicker.
         form(action="/")
           input(type="hidden" name="gameId" value="new")
           input(type="submit" value="Create")
 
     .half
       .cont-join
-        p Join a game. You can share the link you get to your game to make finding rest of the players quicker.
+        h1 Join a game.
+        p Play in a game that is already created.
+        br
+        p You can share the link you get to your game to make finding rest of the players quicker.
         form(action="/")
           input(type="hidden" name="gameId" value="join")
           input(type="submit" value="Join")
+
+    img(src="http://localhost:5000/images/logo.png" id="logo")
+
+    #index-msg
+      p This game is still <strong>beta</strong>.
+      p Many parts are highly untested.
+      p Things could be broken :)
+

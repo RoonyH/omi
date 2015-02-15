@@ -37,7 +37,19 @@ html
             h1(id='#title')
               ="Thanks for checking out :)"
             p(id="description")
-              =""
+              ="You friends can follow this link to this game:"
+              br
+              ="https://apps.facebook.com/1591263741108585/?gameId="+gameId
+            #info
+            #buttons-ok-only
+            #buttons-all
+              form(action="/")
+                input(type="hidden" name="gameId" value="new")
+                input(type="submit" value="Create")
+              form(action="/")
+                input(type="hidden" name="gameId" value="join")
+                input(type="submit" value="Join") 
+
         div(id='player-'+((playerId)%4+1) class="player-loc-3 player-holder text-center")
           ="Waiting for a player.."
 
@@ -45,8 +57,10 @@ html
         div(id='player-'+playerId class="player-loc-4 local-player-holder text-center")
           ="Waiting for a player.."
 
+
     include game.html
 
+    =gameId + " " + playerId
     script(id="template-table" type="x-tmpl-mustache")
       #cards
         div(id='t-card-'+((playerId+2)%4+1) class="card table-card-1")

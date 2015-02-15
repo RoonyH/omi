@@ -11,13 +11,34 @@ h2 {
   font: bold 20px/30px Courgette, cursive, sans-serif;
 }
 
+input[type="submit"] {
+margin: 5px;
+width: 138px;
+background-color: rgb(237, 223, 223);
+border-color: black;
+border-width: 2px;
+padding: 10px 20px;
+border-radius: 30px;
+font: bold 15px/20px Courgette, cursive, sans-serif;
+}
+
+
 .turn-now {
   border: 5px solid;
-  height: 80%;
+  height: 90%;
 }
 
 .turn-now:before {
   content: 'Turn: ';
+}
+
+.disconnected {
+  border: 5px solid black;
+  height: 90%;
+}
+
+.disconnected:before {
+  content: 'Disconnected: ';
 }
 
 .container {
@@ -27,7 +48,6 @@ h2 {
 }
 
 .half {
-  font: bold 200% Courgette, cursive, sans-serif;
   display: inline-block;
   width: 50%;
   height: 50%;
@@ -42,9 +62,11 @@ h2 {
   height: 100%;
 }
 
-.cont-create p {
-  height: 75%
+.cont-create input[type="submit"]{
+  border-color: rgb(208, 63, 68);
+  color: rgb(58, 53, 53);
 }
+
 
 .cont-join {
   background-color: rgb(208, 63, 68);
@@ -53,9 +75,24 @@ h2 {
   height: 100%;
 }
 
-.cont-join p {
-  height: 75%
+.cont-join input[type="submit"]{
+  border-color: rgb(58, 53, 53);
+  color: rgb(58, 53, 53);
 }
+
+
+#logo{
+  position: relative;
+  width: 20%;
+  margin-left: 40%;
+  margin-top: -10%;
+}
+
+#index-msg{
+  text-align: center;
+  margin-top: 5%;
+}
+
 
 #score-board{
   background-color: rgb(110, 70, 70);
@@ -102,13 +139,17 @@ h2 {
 }
 
 #message{
-  display: none;
+  display: block;
   background-color: rgba(237, 223, 223, 0.5);
   top: 0;
   width: 100%;
   position: absolute;
   text-align: center;
   z-index: 1;
+}
+
+#message #buttons-all {
+  display: none;
 }
 
 

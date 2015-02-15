@@ -7,10 +7,11 @@ exports.index = function(req, res){
   var query = url_parts.query;
 
   if(req.cookies.sec){
-    console.log('------>Index: Sec:" + req.cookies.sec + "<------');
+    console.log('------>Index: Sec:' + req.cookies.sec + '<------');
     gameModule.getGameBySec(req.cookies.sec, function(err, game){
       console.log(game)
-      if(err=='no-such-game'){
+      if(err){
+        console.log('Index: No game for '+req.cookies.sec);
         res.clearCookie('sec')
         handleQuery();
       } else {
@@ -43,8 +44,17 @@ exports.index = function(req, res){
       if(query.gameId==='join'){
 
         gameModule.getOpenGame(function(gameId){
+
+          if(!gameId){
+            console.log('handleQuery: No open games')
+            query.gameId = 'new'
+            handleQuery();
+            return;
+          }
+
           gameModule.registerPlayer(gameId, function(err, playerId, sec){
             res.cookie('sec', sec)
+            console.log(err+'mmmmmm');
             res.render('game', {gameId: gameId, playerId: playerId});
           });
         });
@@ -53,9 +63,17 @@ exports.index = function(req, res){
 
         var gameId = parseInt(query.gameId);
       
-        gameModule.registerPlayer(gameId, function(err, playerId, sec){
-          res.cookie('sec', sec)
-          res.render('game', {gameId: gameId, playerId: playerId});
+        console.log('Index: Requested by id ' + query.gameId);
+        gameModule.getStatus(gameId, function(status){
+          if(status!=gameModule.gameStatus.WAITING_PLAYER_JOIN){
+            query.gameId = 'join'
+            handleQuery();
+            return;
+          }
+          gameModule.registerPlayer(gameId, function(err, playerId, sec){
+            res.cookie('sec', sec)
+            res.render('game', {gameId: gameId, playerId: playerId});
+          });
         });
       }
     }
@@ -70,11 +88,14 @@ exports.game = function(opt, callback){
 
     if(err){
       console.log(err);
+      callback(err);
       return;
     }
 
     var gameId = game.gameId;
     var playerId = game.playerId;
+
+    gameModule.setPlayerStatus(gameId, playerId, 'con', function(){
 
     var player = {
       playerId: playerId,
@@ -86,6 +107,7 @@ exports.game = function(opt, callback){
 
       if(!status){
         console.log('game: Game not active!');
+        callback('game-not-active')
         return;
       }
 
@@ -119,10 +141,10 @@ exports.game = function(opt, callback){
                       gameModule.setStatus(gameId, gameModule.gameStatus.WAITING_TRUMPS_PICK, function(){
                         details.status = gameModule.gameStatus.WAITING_TRUMPS_PICK
 
-                        callback(details);
+                        callback(null, details);
                       });
                     } else {
-                      callback(details);
+                      callback(null, details);
                     }
                   });
                 });
@@ -132,6 +154,7 @@ exports.game = function(opt, callback){
           });
         });
       });
+    });
     });
   });
 }
@@ -353,4 +376,31 @@ exports.cardPlayed = function(data, callback){
     });
     });
   }
+}
+
+exports.playerDisconnect = function(opt, callback){
+  gameModule.getGame(opt.gameId, function(game){
+    if(!game){
+      console.log('playerDisconnect: No game!');
+      return;
+    }
+
+    gameModule.setPlayerStatus(opt.gameId, opt.playerId, 'dis', function(){
+      setTimeout(function() {
+        gameModule.getPlayerStatus(opt.gameId, opt.playerId,
+           function(err, status){
+          console.log('playerDisconnect: After waiting 20 secs:---------'+
+                      status+opt.gameId+'-'+opt.playerId);
+          if(status==='dis'){
+            gameModule.setStatus(opt.gameId, 0, function(){
+              gameModule.deleteGame(opt.gameId);
+              opt.afterWait(null, game);
+            });
+          }
+        });
+      }, 20000);
+
+      callback(null, game);
+    });
+  });
 }

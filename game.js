@@ -8,7 +8,7 @@ var redisPass = process.env.REDIS_PASS||'pass';
 
 var client = redis.createClient(redisPort, redisHost);
 
-var ROUNDS_PER_MATCH = 2;
+var ROUNDS_PER_MATCH = 1;
 
 client.auth(redisPass, function(){
   console.log("Connected to "+redisHost+":"+redisPort);
@@ -97,7 +97,9 @@ function clearRound(gameId, callback){
   setRoundWins(gameId, function(){
     client.hget('g'+gameId, 'round', function(err, round){
       if(round>=ROUNDS_PER_MATCH){
-        callback('game-over');
+        client.hset('g'+gameId, 'status', gameStatus.NO_GAME, function(err){
+          callback('game-over');
+        })
       } else {
         callback('round-over');
       }
@@ -105,14 +107,38 @@ function clearRound(gameId, callback){
   });
 }
 
+var deleteGameScript = "redis.call('del', redis.call('get', KEYS[1])) "+
+    "redis.call('del', redis.call('get', KEYS[2])) "+
+    "redis.call('del', redis.call('get', KEYS[3])) "+
+    "redis.call('del', redis.call('get', KEYS[4])) "+
+    "if (redis.call('hget', KEYS[5], 'status')=='1') or " + 
+    "(redis.call('hget', KEYS[5], 'status')=='0') then " + 
+    "redis.call('hset', 'puk', 'status', 'poo') " + 
+    "redis.call('lrem', 'opengames', 1, ARGV[1]) end " +
+    "return KEYS[5]"
+
+
+function deleteGame(gameId){
+
+  client.eval(deleteGameScript, 5, 'g'+gameId+'p1sec', 'g'+gameId+'p2sec',
+    'g'+gameId+'p3sec', 'g'+gameId+'p4sec', 'g'+gameId, ''+gameId, 
+    function(err, val){
+      if(err){
+        console.log(err);
+      }
+      console.log(val);
+    })
+}
+
 
 function getOpenGame(callback){
   client.lrange('opengames', 0, 0, function(err, games){
-    console.log('getOpenGame: Oldest open game is ' + games[0])
 
-    if(games){
+    if(games.length > 0){
+      console.log('getOpenGame: Oldest open game is ' + games[0])
       callback(games[0]);
     } else {
+      console.log('getOpenGame: No open game');
       callback(null);
     }
   })
@@ -158,12 +184,30 @@ function setStatus(gameId, status, callback){
 }
 
 
+function setPlayerStatus(gameId, playerId, status, callback){
+  client.set('ps'+gameId+playerId, status, function(err){
+    console.log('setPlayerStatus: '+gameId+playerId);
+    console.log(err);
+    callback(err);
+  })
+}
+
+
 function getStatus(gameId, callback){
   client.hget('g' + gameId, 'status', function(err, status){
     if(!status)
       status='0'
     callback(parseInt(status));
   });
+}
+
+
+function getPlayerStatus(gameId, playerId, callback){
+  client.get('ps'+gameId+playerId, function(err, status){
+    console.log('getPlayerStatus: '+gameId+playerId);
+    console.log(err);
+    callback(err, status);
+  })
 }
 
 
@@ -478,6 +522,8 @@ function gameBegined(gameId, callback){
 
 function getGameBySec(sec, callback){
   client.get(sec, function(err, game){
+    console.log('getGameBySec: '+typeof game)
+
     if(err)
       throw err;
     if(game)
@@ -585,3 +631,6 @@ exports.getTrumpher = getTrumpher;
 exports.getScore = getScore;
 exports.getOpenGame = getOpenGame;
 exports.clearRound = clearRound;
+exports.setPlayerStatus = setPlayerStatus;
+exports.getPlayerStatus = getPlayerStatus;
+exports.deleteGame = deleteGame;

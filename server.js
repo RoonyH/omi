@@ -20,11 +20,6 @@ app.post('/', routes.index);
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 
-var messages = {
-  not_started: "The game is not started yet!",
-  not_turn: "It's not your turn!"
-}
-
 
 io.on('connection', function (socket) {
   console.log('------------------>  connected!  <---------------------');
@@ -39,8 +34,16 @@ io.on('connection', function (socket) {
       socketId: socket.id
     }
 
-    routes.game(opt, function(game){
+    routes.game(opt, function(err, game){
+
+      if(err){
+        console.log('err');
+        return;
+      }
+
       console.log(JSON.stringify(game));
+
+
 
       var globalGameId = game.gameId;
       var globalPlayerId = game.playerId;
@@ -120,8 +123,8 @@ io.on('connection', function (socket) {
       socket.on('round', function(data){
 
         var opt = {
-          gameId: data.gameId,
-          playerId: data.playerId
+          gameId: globalGameId,
+          playerId: globalPlayerId
         }
 
         routes.round(opt, function(err, game){
@@ -139,22 +142,45 @@ io.on('connection', function (socket) {
 
       socket.on('disconnect', function(){
 
-        // var opt = {
-        //   gameId: data.gameId,
-        //   playerId: data.playerId
-        // }
+        var opt = {
+          gameId: globalGameId,
+          playerId: globalPlayerId,
+          afterWait: function(err, game){
 
-        // routes.round(opt, function(err, game){
-        //   gameDetails = {
-        //     hand: game.hand,
-        //     trumpher: game.trumpher,
-        //     players: [],
-        //     table: [],
-        //     status: 2 // WAITING_TRUMPHS_PICK
-        //   }
+            if(!gameId){
+              return;
+            }
 
-        //   socket.emit('new-round', gameDetails);
-        // })
+            game.players.forEach(function(player){
+              var details = {
+                playerId: globalPlayerId
+              }
+
+              io.to(player.socketId).emit('completely-disconnected', details);
+            });
+          }
+        }
+
+        routes.playerDisconnect(opt, function(err, game){
+
+          if(!game){
+            console.log('playerDisconnect: error '+err)
+            return;
+          }
+
+          if(!game.players){
+            console.log('playerDisconnect: error '+err)
+            return;
+          }
+
+          game.players.forEach(function(player){
+            var details = {
+              playerId: globalPlayerId
+            }
+
+            io.to(player.socketId).emit('player-disconnected', details);
+          });
+        })
       })
 
       // End of rest of events

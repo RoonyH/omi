@@ -65,6 +65,8 @@ require(['jquery', 'models/game'], function($, game){
         $('#trumphs-picker').css('visibility', 'visible')
       }
 
+
+
       // displaye score, could go to backbone view of game.
       $("#red-hand-wins").html(data.score.teamB)
       $("#black-hand-wins").html(data.score.teamA)
@@ -124,21 +126,13 @@ require(['jquery', 'models/game'], function($, game){
             message = 'You Won!';
           }
           setTimeout(function(){
-            $('#message > h1').html(message);
-            $('#message > p').html("");
-            $('#message').css('display', 'block');
 
-            setTimeout(function(){
-              $('#message').fadeOut();
-
-              if(data.end==='game-over'){
-                $('#message > h1').html('Game Over!');
-                $('#message > p').html('Thank you very much for heading this way! '+
-                  'Send your thoughts to amazingfun2012@gmail.com');
-                $('#message').css('display', 'block')
-              }
-
-            }, 3000);
+            if(data.end==='game-over'){
+              showMessage('Game Over!', 'Thank you very much for heading this way! '+
+                'Send your thoughts to amazingfun2012@gmail.com')
+            } else {
+              showMessage(message, "", 3000)
+            }
 
             t.clear();
 
@@ -157,9 +151,7 @@ require(['jquery', 'models/game'], function($, game){
 
 
           if((data.player)%4+1 == omiGameConf.playerId){
-            $('#message > h1').html("It's your turn!");
-            $('#message > p').html("");
-            $('#message').css('display', 'block');
+            showMessage("It's your turn!", "", 2000);
 
             setTimeout(function(){
               $('#message').fadeOut();
@@ -184,22 +176,14 @@ require(['jquery', 'models/game'], function($, game){
           p.giveCard(c);
         });
         setTimeout(function(){p.sortCards()}, 2000)
-        $('#message > h1').html("Trumphs picked!");
-        $('#message > p').html("Trumphs are displayed in the top right coner.<br>"+
-          "Here we go then.. Let the omi begin!");
-        $('#message').css('display', 'block');
-
-        setTimeout(function(){
-          $('#message').fadeOut();
-        }, 4000);
+        
+        showMessage("Trumphs picked!", "Trumphs are displayed in the top "+
+          "right coner.<br> Here we go then.. Let the omi begin!", 4000);
       });
 
       socket.on('cant-play-card', function(data){
         console.log(data);
-        $('#message > h1').html("Can't play card!");
-        $('#message > p').html(messages[data.msg]);
-        $('#message').css('display', 'block');
-        setTimeout(function(){$('#message').fadeOut()}, 3000)
+        showMessage("Can't play card!", messages[data.msg], 2000)
 
         var c = g.createCard(data.card);
         c.set('clickHandler', function(){
@@ -214,16 +198,29 @@ require(['jquery', 'models/game'], function($, game){
         p.sortCards();
 
       });
+
+      socket.on('player-disconnected', function(data){
+        console.log(data);
+        $('#player-'+data.playerId+' > #border').addClass('disconnected');
+      });
+
+      socket.on('completely-disconnected', function(data){
+        console.log(data);
+        showMessage("completely disconnected");
+      });
     });
 
 
     socket.on('connect', function(){
+
+      console.log('connected!')
       var details = {
         sec: getCookieValue('sec'),
         name: "Player " + omiGameConf.playerId
       }
 
       if(typeof FB != 'undefined'){
+        console.log(FB)
         if(omiGameConf.fbConnected){
           socket.emit('start', details) //if socket disconnected after fb connect
         } else {
@@ -238,6 +235,7 @@ require(['jquery', 'models/game'], function($, game){
           })
         }
       } else {
+        console.log('starting connected!')
         socket.emit('start', details);
       }
     });
@@ -247,4 +245,22 @@ require(['jquery', 'models/game'], function($, game){
 function getCookieValue(a, b) {
     b = document.cookie.match('(^|;)\\s*' + a + '\\s*=\\s*([^;]+)');
     return b ? b.pop() : '';
+}
+
+showMessage.timer;
+
+function showMessage(title, description, time){
+  var title = title||"Hi!";
+  var description = description||""
+
+  $('#message > h1').html(title);
+  $('#message > p').html(description);
+  $('#message').css('display', 'block');
+  $('#message > #buttons-all').css('display', 'none');
+
+  if(time){
+    setTimeout(function(){$('#message').fadeOut()}, 3000)
+  } else {
+    $('#message > #buttons-all').css('display', 'block');
+  }
 }
